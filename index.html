@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Sangam</title>
+<meta name="theme-color" content="#14110E">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Sangam">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  :root {
+    --bg: #14110E;
+    --panel: #1F1A14;
+    --line: rgba(232, 188, 94, 0.14);
+    --gold: #E8BC5E;
+    --muted: #8A7D6A;
+    --text: #F0E8DA;
+    --green: #7FBF8E;
+    --terra: #C9714F;
+    --blue: #7FA8E8;
+    --barH: 60px;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; height: 100%; background: var(--bg); overflow: hidden; overscroll-behavior: none; }
+  body { font-family: -apple-system, 'Segoe UI', Roboto, sans-serif; color: var(--text); }
+
+  /* ===== Zona de apps ===== */
+  #stage { position: fixed; top: 0; left: 0; right: 0; bottom: calc(var(--barH) + env(safe-area-inset-bottom, 0px)); }
+  .pane { position: absolute; inset: 0; display: none; }
+  .pane.active { display: block; }
+  .pane iframe { width: 100%; height: 100%; border: 0; display: block; background: var(--bg); }
+
+  /* Cargador por app */
+  .loader {
+    position: absolute; inset: 0; background: var(--bg);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+    transition: opacity .35s ease; z-index: 2;
+  }
+  .loader.hidden { opacity: 0; pointer-events: none; }
+  .loader .dot { width: 14px; height: 14px; border-radius: 50%; animation: pulse 1.2s ease-in-out infinite; }
+  .loader .lname { font-family: 'Fraunces', Georgia, serif; font-style: italic; font-size: 22px; color: var(--text); letter-spacing: .3px; }
+  .loader .lhint { font-size: 12px; color: var(--muted); }
+  @keyframes pulse { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(.55); opacity: .45; } }
+
+  /* ===== Barra de pestañas ===== */
+  #bar {
+    position: fixed; left: 0; right: 0; bottom: 0;
+    height: calc(var(--barH) + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    background: rgba(20, 17, 14, 0.97); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid var(--line);
+    display: flex; z-index: 50;
+  }
+  .tab {
+    flex: 1; border: 0; background: transparent; color: var(--muted);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    font-size: 10px; font-weight: 600; letter-spacing: .4px; cursor: pointer;
+    transition: color .2s ease; padding: 0;
+  }
+  .tab svg { width: 22px; height: 22px; }
+  .tab.active { color: var(--gold); }
+  .tab .ind { width: 4px; height: 4px; border-radius: 50%; background: transparent; margin-top: 1px; }
+  .tab.active .ind { background: var(--gold); }
+
+  /* ===== Ajustes ===== */
+  #settings { position: absolute; inset: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: max(20px, env(safe-area-inset-top, 0px)) 20px 30px; }
+  .s-head { text-align: center; margin: 18px 0 26px; }
+  .s-head .eyebrow { font-size: 10px; text-transform: uppercase; letter-spacing: 3px; color: var(--muted); margin-bottom: 6px; }
+  .s-head h1 { font-family: 'Fraunces', Georgia, serif; font-weight: 600; font-size: 34px; margin: 0; color: var(--text); }
+  .s-head h1 em { font-style: italic; color: var(--gold); }
+  .s-head .apps-line { margin-top: 10px; font-size: 12px; color: var(--muted); display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .s-head .mini { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 18px; margin-bottom: 14px; max-width: 520px; margin-left: auto; margin-right: auto; }
+  .card h2 { font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: var(--muted); margin: 0 0 12px; font-weight: 700; }
+  .card p.hint { font-size: 12.5px; color: var(--muted); line-height: 1.5; margin: 10px 0 0; }
+  .card a { color: var(--gold); }
+
+  .seg { display: flex; background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 4px; gap: 4px; }
+  .seg button { flex: 1; border: 0; border-radius: 9px; padding: 11px 0; font-size: 14px; font-weight: 700; background: transparent; color: var(--muted); cursor: pointer; }
+  .seg button.on { background: var(--gold); color: #14110E; }
+
+  .field { display: flex; gap: 8px; }
+  .field input { flex: 1; background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; color: var(--text); font-size: 14px; font-family: ui-monospace, monospace; min-width: 0; }
+  .field input::placeholder { color: #5d5546; }
+  .btn { border: 0; border-radius: 12px; padding: 12px 16px; font-size: 14px; font-weight: 700; cursor: pointer; }
+  .btn.gold { background: var(--gold); color: #14110E; }
+  .btn.ghost { background: var(--bg); color: var(--text); border: 1px solid var(--line); width: 100%; margin-top: 8px; }
+  .ok { font-size: 12.5px; color: var(--green); margin-top: 10px; font-weight: 600; }
+
+  .applinks { display: flex; flex-direction: column; gap: 8px; }
+  .applinks a { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text); background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; font-size: 14px; font-weight: 600; }
+  .applinks .mini { width: 9px; height: 9px; border-radius: 50%; }
+  .applinks span.arrow { margin-left: auto; color: var(--muted); }
+
+  .version { text-align: center; font-size: 11px; color: #5d5546; margin-top: 22px; letter-spacing: 1px; }
+</style>
+</head>
+<body>
+
+<div id="stage">
+  <div class="pane" id="pane-entrenador" data-src="entrenador.html">
+    <div class="loader"><div class="dot" style="background:var(--blue)"></div><div class="lname" data-name="entrenador"></div><div class="lhint" data-hint></div></div>
+  </div>
+  <div class="pane" id="pane-annapurna" data-src="annapurna.html">
+    <div class="loader"><div class="dot" style="background:var(--green)"></div><div class="lname" data-name="annapurna"></div><div class="lhint" data-hint></div></div>
+  </div>
+  <div class="pane" id="pane-gastos" data-src="gastos.html">
+    <div class="loader"><div class="dot" style="background:var(--gold)"></div><div class="lname" data-name="gastos"></div><div class="lhint" data-hint></div></div>
+  </div>
+  <div class="pane" id="pane-asesor" data-src="asesor.html">
+    <div class="loader"><div class="dot" style="background:var(--terra)"></div><div class="lname" data-name="asesor"></div><div class="lhint" data-hint></div></div>
+  </div>
+
+  <div class="pane" id="pane-ajustes">
+    <div id="settings">
+      <div class="s-head">
+        <div class="eyebrow" data-t="suite"></div>
+        <h1>San<em>gam</em></h1>
+        <div class="apps-line">
+          <span class="mini" style="background:var(--blue)"></span><span data-t="n_ent"></span>
+          <span class="mini" style="background:var(--green)"></span><span data-t="n_ann"></span>
+          <span class="mini" style="background:var(--gold)"></span><span data-t="n_gas"></span>
+          <span class="mini" style="background:var(--terra)"></span><span data-t="n_ase"></span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 data-t="lang_h"></h2>
+        <div class="seg">
+          <button id="lang-es" onclick="setLang('es')">Español</button>
+          <button id="lang-en" onclick="setLang('en')">English</button>
+        </div>
+        <p class="hint" data-t="lang_hint"></p>
+      </div>
+
+      <div class="card">
+        <h2 data-t="key_h"></h2>
+        <div class="field">
+          <input type="password" id="gkey" placeholder="AIza...">
+          <button class="btn gold" onclick="saveKey()" data-t="save"></button>
+        </div>
+        <div class="ok" id="key-ok" style="display:none"></div>
+        <p class="hint"><span data-t="key_hint"></span> <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a></p>
+      </div>
+
+      <div class="card">
+        <h2 data-t="maint_h"></h2>
+        <button class="btn ghost" onclick="reloadApps()" data-t="reload"></button>
+        <p class="hint" data-t="reload_hint"></p>
+      </div>
+
+      <div class="card">
+        <h2 data-t="open_h"></h2>
+        <div class="applinks">
+          <a href="entrenador.html" target="_blank" rel="noopener"><span class="mini" style="background:var(--blue)"></span><span data-t="n_ent"></span><span class="arrow">›</span></a>
+          <a href="annapurna.html" target="_blank" rel="noopener"><span class="mini" style="background:var(--green)"></span><span data-t="n_ann"></span><span class="arrow">›</span></a>
+          <a href="gastos.html" target="_blank" rel="noopener"><span class="mini" style="background:var(--gold)"></span><span data-t="n_gas"></span><span class="arrow">›</span></a>
+          <a href="asesor.html" target="_blank" rel="noopener"><span class="mini" style="background:var(--terra)"></span><span data-t="n_ase"></span><span class="arrow">›</span></a>
+        </div>
+      </div>
+
+      <div class="version">SANGAM · v1.2</div>
+    </div>
+  </div>
+</div>
+
+<nav id="bar">
+  <button class="tab" data-tab="entrenador" onclick="show('entrenador')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.4 14.4 9.6 9.6"/><path d="M18.657 21.485a2 2 0 1 1-2.829-2.828l-1.767 1.768a2 2 0 1 1-2.829-2.829l6.364-6.364a2 2 0 1 1 2.829 2.829l-1.768 1.767a2 2 0 1 1 2.828 2.829z"/><path d="m21.5 21.5-1.4-1.4"/><path d="M3.9 3.9 2.5 2.5"/><path d="M6.404 12.768a2 2 0 1 1-2.829-2.829l1.768-1.767a2 2 0 1 1-2.828-2.829l2.828-2.828a2 2 0 1 1 2.829 2.828l1.767-1.768a2 2 0 1 1 2.829 2.829z"/></svg>
+    <span data-t="t_ent"></span><span class="ind"></span>
+  </button>
+  <button class="tab" data-tab="annapurna" onclick="show('annapurna')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>
+    <span data-t="t_ann"></span><span class="ind"></span>
+  </button>
+  <button class="tab" data-tab="gastos" onclick="show('gastos')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></svg>
+    <span data-t="t_gas"></span><span class="ind"></span>
+  </button>
+  <button class="tab" data-tab="asesor" onclick="show('asesor')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg>
+    <span data-t="t_ase"></span><span class="ind"></span>
+  </button>
+  <button class="tab" data-tab="ajustes" onclick="show('ajustes')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    <span data-t="t_set"></span><span class="ind"></span>
+  </button>
+</nav>
+
+<script>
+// ===================== IDIOMA =====================
+var LANG = localStorage.getItem('suite_lang') || 'es';
+
+var STR = {
+  es: {
+    t_ent: 'Entrenador', t_ann: 'Annapurna', t_gas: 'Gastos', t_ase: 'Asesor', t_set: 'Ajustes',
+    n_ent: 'Entrenador', n_ann: 'Annapurna', n_gas: 'GastoFlow', n_ase: 'El Asesor',
+    suite: '· tus cuatro apps ·',
+    lang_h: 'Idioma de las tres apps',
+    lang_hint: 'Cambia el idioma del Entrenador, Annapurna y el Asesor a la vez. (GastoFlow aún está solo en español.)',
+    key_h: 'Clave de Google Gemini (compartida)',
+    key_hint: 'Una sola clave para GastoFlow, la IA de Annapurna (platos, tickets, recetas) y todo el Asesor. Se guarda solo en tu móvil. Gratis en',
+    save: 'Guardar',
+    key_saved: '✓ Clave guardada para todas las apps',
+    key_set: '✓ Ya hay una clave guardada',
+    maint_h: 'Mantenimiento',
+    reload: 'Recargar las cuatro apps',
+    reload_hint: 'Úsalo si tras subir una versión nueva sigues viendo la antigua (caché).',
+    open_h: 'Abrir una app a pantalla completa',
+    loading: 'cargando…',
+    loading_big: 'la primera vez tarda un poco (4 MB)'
+  },
+  en: {
+    t_ent: 'Trainer', t_ann: 'Annapurna', t_gas: 'Expenses', t_ase: 'Advisor', t_set: 'Settings',
+    n_ent: 'Trainer', n_ann: 'Annapurna', n_gas: 'GastoFlow', n_ase: 'The Advisor',
+    suite: '· your four apps ·',
+    lang_h: 'Language for all three apps',
+    lang_hint: 'Switches the Trainer, Annapurna and the Advisor at once. (GastoFlow is still Spanish-only.)',
+    key_h: 'Google Gemini key (shared)',
+    key_hint: 'One key for GastoFlow, the Annapurna AI (dishes, receipts, recipes) and the whole Advisor. Stored only on your phone. Free at',
+    save: 'Save',
+    key_saved: '✓ Key saved for all the apps',
+    key_set: '✓ A key is already saved',
+    maint_h: 'Maintenance',
+    reload: 'Reload the four apps',
+    reload_hint: 'Use this if you still see an old version after uploading a new one (cache).',
+    open_h: 'Open an app full screen',
+    loading: 'loading…',
+    loading_big: 'the first time takes a moment (4 MB)'
+  }
+};
+
+var APP_NAMES = { entrenador: { es: 'Entrenador', en: 'Trainer' }, annapurna: { es: 'Annapurna', en: 'Annapurna' }, gastos: { es: 'GastoFlow', en: 'GastoFlow' }, asesor: { es: 'El Asesor', en: 'The Advisor' } };
+
+function t(k) { return (STR[LANG] && STR[LANG][k]) || STR.es[k] || k; }
+
+function paint() {
+  document.querySelectorAll('[data-t]').forEach(function (el) { el.textContent = t(el.getAttribute('data-t')); });
+  document.querySelectorAll('.loader .lname').forEach(function (el) {
+    var n = el.getAttribute('data-name');
+    el.textContent = APP_NAMES[n][LANG];
+  });
+  document.querySelectorAll('.loader .lhint').forEach(function (el) {
+    var isBig = el.closest('#pane-entrenador');
+    el.textContent = isBig ? t('loading_big') : t('loading');
+  });
+  document.getElementById('lang-es').classList.toggle('on', LANG === 'es');
+  document.getElementById('lang-en').classList.toggle('on', LANG === 'en');
+  document.documentElement.lang = LANG;
+  var ok = document.getElementById('key-ok');
+  if (hasKey()) { ok.style.display = 'block'; ok.textContent = t('key_set'); } else { ok.style.display = 'none'; }
+}
+
+function setLang(l) {
+  if (l === LANG) return;
+  LANG = l;
+  // Una sola orden para las tres apps:
+  localStorage.setItem('suite_lang', l);   // contenedor + Asesor
+  localStorage.setItem('asesor_lang', l);  // Asesor (respaldo)
+  localStorage.setItem('fshd_lang', l);    // Entrenador
+  localStorage.setItem('annapurna_lang', l); // Annapurna
+  paint();
+  reloadApps(true);
+}
+
+// ===================== CLAVE GEMINI =====================
+function hasKey() { return !!(localStorage.getItem('gemini_api_key') || localStorage.getItem('gf_gemini_key') || localStorage.getItem('apikey')); }
+
+function saveKey() {
+  var v = (document.getElementById('gkey').value || '').trim();
+  if (!v) return;
+  localStorage.setItem('gemini_api_key', v); // común
+  localStorage.setItem('gf_gemini_key', v);  // GastoFlow
+  localStorage.setItem('apikey', v);         // El Asesor
+  document.getElementById('gkey').value = '';
+  var ok = document.getElementById('key-ok');
+  ok.style.display = 'block';
+  ok.textContent = t('key_saved');
+  reloadApps(true);
+}
+
+// ===================== PESTAÑAS E IFRAMES =====================
+var loaded = {};
+
+function mount(name, bust) {
+  var pane = document.getElementById('pane-' + name);
+  if (!pane || !pane.getAttribute('data-src')) return;
+  var old = pane.querySelector('iframe');
+  if (old) old.remove();
+  var loader = pane.querySelector('.loader');
+  loader.classList.remove('hidden');
+  var f = document.createElement('iframe');
+  f.setAttribute('allow', 'camera; microphone; autoplay; fullscreen; clipboard-write');
+  f.src = pane.getAttribute('data-src') + (bust ? ('?r=' + Date.now()) : '');
+  f.addEventListener('load', function () { setTimeout(function () { loader.classList.add('hidden'); }, 250); });
+  pane.appendChild(f);
+  loaded[name] = true;
+}
+
+function show(name) {
+  document.querySelectorAll('.pane').forEach(function (p) { p.classList.remove('active'); });
+  document.querySelectorAll('.tab').forEach(function (b) { b.classList.remove('active'); });
+  document.getElementById('pane-' + name).classList.add('active');
+  document.querySelector('.tab[data-tab="' + name + '"]').classList.add('active');
+  if (name !== 'ajustes' && !loaded[name]) mount(name, false);
+  localStorage.setItem('suite_tab', name);
+}
+
+function reloadApps(onlyLoaded) {
+  ['entrenador', 'annapurna', 'gastos', 'asesor'].forEach(function (n) {
+    if (loaded[n]) mount(n, true);
+  });
+}
+
+// ===================== ARRANQUE =====================
+paint();
+show(localStorage.getItem('suite_tab') || 'entrenador');
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () { navigator.serviceWorker.register('./sw.js').catch(function () {}); });
+}
+</script>
+</body>
+</html>
