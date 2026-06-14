@@ -1,0 +1,2014 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Annapurna">
+<meta name="theme-color" content="#f5ecd9">
+<title>Annapurna · Dieta Vegetariana</title>
+
+<link rel="manifest" href='data:application/manifest+json,{"name":"Annapurna","short_name":"Annapurna","description":"Dieta vegetariana india con IA","start_url":".","display":"standalone","background_color":"%23f5ecd9","theme_color":"%23b8472a","orientation":"portrait","icons":[{"src":"data:image/svg%2bxml;utf8,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 512 512%27><rect width=%27512%27 height=%27512%27 fill=%27%23b8472a%27 rx=%2796%27/><text x=%2750%25%27 y=%2762%25%27 font-size=%27300%27 text-anchor=%27middle%27 fill=%27%23f5ecd9%27 font-family=%27serif%27>अ</text></svg>","sizes":"512x512","type":"image/svg+xml"}]}'>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --cream: #f5ecd9;
+    --cream-soft: #fef8e8;
+    --cream-dark: #ebe0c5;
+    --terracotta: #b8472a;
+    --terracotta-dark: #8c2f1a;
+    --saffron: #d49021;
+    --gold: #b08840;
+    --gold-soft: #d4b878;
+    --ink: #2a1a10;
+    --ink-soft: #4a342a;
+    --ink-mute: #7a6354;
+    --moss: #5a6b3d;
+    --moss-dark: #3d4a28;
+    --shadow: rgba(60, 30, 15, 0.15);
+    --shadow-lg: rgba(60, 30, 15, 0.28);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    background: var(--cream);
+    color: var(--ink);
+    font-family: 'Fraunces', Georgia, serif;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    overscroll-behavior: none;
+  }
+
+  body {
+    background-image:
+      radial-gradient(circle at 20% 10%, rgba(212, 144, 33, 0.10), transparent 40%),
+      radial-gradient(circle at 80% 90%, rgba(184, 71, 42, 0.08), transparent 45%);
+    background-attachment: fixed;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .grain {
+    position: fixed; inset: 0; pointer-events: none;
+    opacity: 0.35; z-index: 1;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3CfeColorMatrix values='0 0 0 0 0.3 0 0 0 0 0.2 0 0 0 0 0.1 0 0 0 0.06 0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+    mix-blend-mode: multiply;
+  }
+
+  header {
+    position: relative; z-index: 2;
+    padding: calc(env(safe-area-inset-top) + 18px) 20px 14px;
+    text-align: center;
+  }
+
+  .ornament { color: var(--gold); font-size: 12px; letter-spacing: 0.5em; margin-bottom: 4px; }
+  h1 { font-family: 'Cormorant Garamond', serif; font-weight: 500; font-size: 34px; letter-spacing: -0.01em; line-height: 1; }
+  h1 em { font-style: italic; color: var(--terracotta); font-weight: 400; }
+  .tagline { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--ink-mute); margin-top: 6px; }
+
+  /* LANG TOGGLE */
+  .lang-toggle {
+    position: absolute;
+    top: calc(env(safe-area-inset-top) + 18px);
+    right: 14px;
+    display: flex;
+    background: var(--cream-soft);
+    border: 1px solid rgba(176, 136, 64, 0.3);
+    border-radius: 20px;
+    padding: 3px;
+    z-index: 5;
+  }
+  .lang-btn {
+    background: none;
+    border: none;
+    padding: 5px 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    color: var(--ink-mute);
+    cursor: pointer;
+    border-radius: 14px;
+    transition: all 0.2s;
+  }
+  .lang-btn.active {
+    background: var(--terracotta);
+    color: var(--cream-soft);
+  }
+
+  nav.tabs {
+    position: sticky; top: 0; z-index: 10;
+    background: var(--cream);
+    background-image: radial-gradient(circle at 50% 0%, rgba(212, 144, 33, 0.08), transparent 50%);
+    display: flex; justify-content: space-around;
+    border-top: 1px solid rgba(60, 30, 15, 0.1);
+    border-bottom: 1px solid rgba(60, 30, 15, 0.1);
+    padding: 4px 4px;
+  }
+
+  .tab {
+    flex: 1; padding: 10px 2px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8.5px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--ink-mute); background: none; border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer; transition: all 0.25s;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+  }
+  .tab svg { width: 18px; height: 18px; stroke-width: 1.5; }
+  .tab.active { color: var(--terracotta); border-bottom-color: var(--terracotta); }
+  .tab:active { transform: scale(0.94); }
+
+  main { position: relative; z-index: 2; padding: 18px 16px 100px; max-width: 720px; margin: 0 auto; }
+  .view { display: none; animation: fadeIn 0.4s ease; }
+  .view.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* RING CARD */
+  .ring-card {
+    background: linear-gradient(140deg, var(--cream-soft) 0%, var(--cream-dark) 100%);
+    border: 1px solid rgba(176, 136, 64, 0.3);
+    border-radius: 22px;
+    padding: 22px 20px 18px;
+    margin-bottom: 18px;
+    text-align: center;
+    box-shadow: 0 10px 32px var(--shadow);
+    position: relative;
+    overflow: hidden;
+  }
+  .ring-card::before {
+    content: ''; position: absolute;
+    top: -50%; right: -30%; width: 220px; height: 220px;
+    background: radial-gradient(circle, rgba(212, 144, 33, 0.18), transparent 70%);
+    border-radius: 50%; pointer-events: none;
+  }
+
+  .date-line { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 12px; position: relative; z-index: 1; }
+  .date-line button { background: none; border: none; color: var(--ink-soft); cursor: pointer; font-size: 20px; padding: 4px 8px; line-height: 1; }
+  .date-line .date { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-soft); min-width: 140px; }
+
+  .ring-svg-wrap { position: relative; display: inline-block; width: 170px; height: 170px; }
+  .ring-svg { transform: rotate(-90deg); width: 100%; height: 100%; }
+  .ring-bg { fill: none; stroke: rgba(176, 136, 64, 0.18); stroke-width: 11; }
+  .ring-fg { fill: none; stroke: url(#ringGrad); stroke-width: 11; stroke-linecap: round; transition: stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
+  .ring-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .ring-num { font-family: 'Cormorant Garamond', serif; font-size: 40px; font-weight: 500; color: var(--ink); line-height: 1; }
+  .ring-of { font-family: 'JetBrains Mono', monospace; font-size: 9.5px; color: var(--ink-soft); letter-spacing: 0.15em; margin-top: 4px; }
+  .ring-label { font-family: 'JetBrains Mono', monospace; font-size: 8.5px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--gold); margin-top: -2px; }
+
+  .macros { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 18px; padding-top: 16px; border-top: 1px dashed rgba(60, 30, 15, 0.2); position: relative; z-index: 1; }
+  .macro { text-align: center; }
+  .macro-val { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 600; color: var(--ink); }
+  .macro-val .unit { font-size: 10px; color: var(--ink-mute); font-weight: 400; margin-left: 1px; }
+  .macro-bar { height: 3px; background: rgba(176, 136, 64, 0.18); border-radius: 2px; margin: 5px 0; overflow: hidden; }
+  .macro-bar-fill { height: 100%; border-radius: 2px; transition: width 0.6s ease; }
+  .macro-p .macro-bar-fill { background: var(--terracotta); }
+  .macro-c .macro-bar-fill { background: var(--saffron); }
+  .macro-f .macro-bar-fill { background: var(--moss); }
+  .macro-name { font-family: 'JetBrains Mono', monospace; font-size: 8.5px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-mute); }
+
+  /* ACTION BUTTONS */
+  .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; }
+  .btn-action {
+    background: var(--terracotta); color: var(--cream-soft);
+    border: none; border-radius: 14px;
+    padding: 14px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase;
+    cursor: pointer; box-shadow: 0 4px 14px rgba(184, 71, 42, 0.3);
+    transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .btn-action:active { transform: scale(0.96); box-shadow: 0 2px 8px rgba(184, 71, 42, 0.3); }
+  .btn-action svg { width: 16px; height: 16px; stroke-width: 1.8; }
+  .btn-action.secondary { background: var(--moss); box-shadow: 0 4px 14px rgba(90, 107, 61, 0.3); }
+  .btn-action.secondary:active { box-shadow: 0 2px 8px rgba(90, 107, 61, 0.3); }
+
+  /* SECTION TITLE */
+  .section-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px; font-weight: 500;
+    margin: 22px 0 12px; display: flex; align-items: center; gap: 10px;
+  }
+  .section-title::before, .section-title::after {
+    content: ''; flex: 1; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(176, 136, 64, 0.4), transparent);
+  }
+  .section-title em { color: var(--terracotta); font-style: italic; }
+
+  /* MEAL CARD */
+  .meals-list { display: flex; flex-direction: column; gap: 12px; }
+
+  .meal {
+    background: rgba(255, 252, 244, 0.7);
+    border: 1px solid rgba(176, 136, 64, 0.22);
+    border-radius: 16px;
+    padding: 14px 16px;
+    backdrop-filter: blur(6px);
+  }
+
+  .meal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .meal-title { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 600; color: var(--ink); display: flex; align-items: center; gap: 8px; }
+  .meal-time { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.15em; color: var(--ink-mute); }
+  .meal-icon { font-size: 18px; }
+
+  .meal-items { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
+  .meal-item { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; font-size: 14px; color: var(--ink-soft); border-bottom: 1px dotted rgba(60, 30, 15, 0.1); }
+  .meal-item:last-child { border-bottom: none; }
+  .meal-item-name { flex: 1; }
+  .meal-item-qty { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-mute); margin: 0 8px; }
+  .meal-item-kcal { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--terracotta); font-weight: 500; }
+  .meal-item-del { background: none; border: none; color: var(--ink-mute); cursor: pointer; padding: 4px 6px; font-size: 14px; }
+
+  .meal-total { display: flex; justify-content: space-between; align-items: center; padding-top: 6px; border-top: 1px solid rgba(176, 136, 64, 0.2); }
+  .meal-total-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-mute); }
+  .meal-total-val { font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 600; color: var(--ink); }
+  .meal-total-val .unit { font-size: 10px; color: var(--ink-mute); }
+
+  .meal-add { background: none; border: 1px dashed rgba(176, 136, 64, 0.4); color: var(--ink-mute); border-radius: 10px; padding: 8px; width: 100%; margin-top: 8px; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; cursor: pointer; }
+  .meal-add:active { background: rgba(176, 136, 64, 0.08); }
+
+  .empty-meal { color: var(--ink-mute); font-style: italic; font-size: 13px; text-align: center; padding: 8px 0; }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 100;
+    background: rgba(42, 26, 16, 0.6);
+    backdrop-filter: blur(8px);
+    display: none; align-items: flex-end; justify-content: center;
+    animation: fadeIn 0.25s ease;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal {
+    background: var(--cream);
+    width: 100%; max-width: 720px;
+    max-height: 92vh;
+    border-radius: 24px 24px 0 0;
+    padding: 20px 18px calc(20px + env(safe-area-inset-bottom));
+    overflow-y: auto;
+    animation: slideUp 0.35s cubic-bezier(0.34, 1.3, 0.64, 1);
+    box-shadow: 0 -10px 40px var(--shadow-lg);
+  }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .modal-handle { width: 40px; height: 4px; background: rgba(60, 30, 15, 0.2); border-radius: 2px; margin: 0 auto 14px; }
+  .modal-title { font-family: 'Cormorant Garamond', serif; font-size: 26px; font-weight: 500; margin-bottom: 14px; }
+  .modal-title em { color: var(--terracotta); font-style: italic; }
+
+  .input-wrap { margin-bottom: 14px; }
+  .input-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-mute); margin-bottom: 6px; }
+  .input, .select, .textarea {
+    width: 100%; background: var(--cream-soft);
+    border: 1px solid rgba(176, 136, 64, 0.3);
+    border-radius: 10px; padding: 12px 14px;
+    font-family: 'Fraunces', serif; font-size: 15px; color: var(--ink);
+    outline: none;
+  }
+  .input:focus, .select:focus, .textarea:focus { border-color: var(--terracotta); box-shadow: 0 0 0 3px rgba(184, 71, 42, 0.1); }
+  .textarea { resize: vertical; min-height: 70px; }
+
+  .row { display: flex; gap: 10px; }
+  .row > * { flex: 1; }
+
+  .btn-primary {
+    width: 100%; background: var(--terracotta); color: var(--cream-soft);
+    border: none; border-radius: 12px; padding: 14px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
+    cursor: pointer; margin-top: 8px;
+  }
+  .btn-primary:active { transform: scale(0.98); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-secondary { background: transparent; color: var(--ink-soft); border: 1px solid rgba(60, 30, 15, 0.2); }
+
+  /* SEARCH RESULTS */
+  .food-results { display: flex; flex-direction: column; gap: 6px; max-height: 280px; overflow-y: auto; margin-bottom: 12px; }
+  .food-result {
+    background: var(--cream-soft); border: 1px solid rgba(176, 136, 64, 0.2);
+    border-radius: 10px; padding: 10px 12px;
+    display: flex; justify-content: space-between; align-items: center;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .food-result:active { background: var(--cream-dark); }
+  .food-result-name { font-size: 14px; }
+  .food-result-name .hint { font-size: 11px; color: var(--ink-mute); display: block; margin-top: 2px; }
+  .food-result-kcal { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--terracotta); }
+
+  /* PANTRY */
+  .pantry-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .pantry-item {
+    background: rgba(255, 252, 244, 0.8);
+    border: 1px solid rgba(176, 136, 64, 0.22);
+    border-radius: 14px; padding: 12px 14px;
+    position: relative;
+  }
+  .pantry-name { font-family: 'Cormorant Garamond', serif; font-size: 17px; font-weight: 600; margin-bottom: 4px; }
+  .pantry-qty { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-mute); letter-spacing: 0.1em; }
+  .pantry-del { position: absolute; top: 6px; right: 8px; background: none; border: none; color: var(--ink-mute); cursor: pointer; font-size: 14px; padding: 4px; }
+
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--ink-mute); }
+  .empty-state .icon { font-size: 36px; margin-bottom: 10px; opacity: 0.5; }
+  .empty-state .text { font-family: 'Cormorant Garamond', serif; font-size: 18px; font-style: italic; }
+  .empty-state .hint { font-size: 12px; margin-top: 6px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.1em; }
+
+  /* SHOPPING */
+  .shop-list { display: flex; flex-direction: column; gap: 8px; }
+  .shop-item {
+    background: rgba(255, 252, 244, 0.7);
+    border: 1px solid rgba(176, 136, 64, 0.2);
+    border-radius: 12px; padding: 12px 14px;
+    display: flex; align-items: center; gap: 12px;
+    transition: all 0.2s;
+  }
+  .shop-item.checked { opacity: 0.5; }
+  .shop-item.checked .shop-name { text-decoration: line-through; }
+  .shop-check {
+    width: 22px; height: 22px; border: 2px solid var(--gold);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; flex-shrink: 0; background: transparent;
+    transition: all 0.2s;
+  }
+  .shop-item.checked .shop-check { background: var(--moss); border-color: var(--moss); }
+  .shop-check svg { width: 12px; height: 12px; stroke: var(--cream); stroke-width: 3; opacity: 0; }
+  .shop-item.checked .shop-check svg { opacity: 1; }
+  .shop-name { flex: 1; font-size: 15px; }
+  .shop-qty { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-mute); }
+  .shop-del { background: none; border: none; color: var(--ink-mute); cursor: pointer; padding: 4px; }
+
+  /* RECIPES */
+  .recipe-card {
+    background: linear-gradient(140deg, var(--cream-soft), var(--cream-dark));
+    border: 1px solid rgba(176, 136, 64, 0.3);
+    border-radius: 18px;
+    padding: 18px;
+    margin-bottom: 14px;
+    box-shadow: 0 6px 20px var(--shadow);
+  }
+  .recipe-name { font-family: 'Cormorant Garamond', serif; font-size: 24px; font-weight: 600; color: var(--ink); }
+  .recipe-name em { color: var(--terracotta); font-style: italic; }
+  .recipe-meta { display: flex; gap: 14px; margin: 8px 0 12px; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-mute); letter-spacing: 0.1em; }
+  .recipe-meta span { display: flex; align-items: center; gap: 4px; }
+  .recipe-desc { font-size: 14px; color: var(--ink-soft); margin-bottom: 12px; line-height: 1.5; }
+  .recipe-section-title { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--gold); margin: 10px 0 6px; }
+  .recipe-ings, .recipe-steps { font-size: 13px; color: var(--ink-soft); line-height: 1.6; padding-left: 16px; }
+  .recipe-ings li, .recipe-steps li { margin-bottom: 4px; }
+  .recipe-missing { background: rgba(212, 144, 33, 0.12); border-left: 3px solid var(--saffron); padding: 8px 10px; border-radius: 6px; margin-top: 10px; font-size: 12px; }
+  .recipe-missing strong { color: var(--terracotta); font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.2em; }
+
+  /* LOADING */
+  .loading { display: flex; flex-direction: column; align-items: center; padding: 30px 20px; }
+  .spinner {
+    width: 40px; height: 40px;
+    border: 3px solid rgba(176, 136, 64, 0.2);
+    border-top-color: var(--terracotta);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { margin-top: 12px; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-mute); }
+
+  .image-preview { width: 100%; max-height: 280px; object-fit: cover; border-radius: 12px; margin-bottom: 12px; }
+
+  /* SETTINGS */
+  .settings-card {
+    background: rgba(255, 252, 244, 0.7);
+    border: 1px solid rgba(176, 136, 64, 0.22);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .settings-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px dotted rgba(60, 30, 15, 0.1); }
+  .settings-row:last-child { border-bottom: none; }
+  .settings-label { font-size: 14px; color: var(--ink-soft); }
+  .settings-val { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--terracotta); }
+
+  .pill-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .pill {
+    background: var(--cream-soft); border: 1px solid rgba(176, 136, 64, 0.3);
+    border-radius: 16px; padding: 6px 12px;
+    font-size: 12px; cursor: pointer;
+  }
+  .pill.active { background: var(--terracotta); color: var(--cream-soft); border-color: var(--terracotta); }
+
+  .toast {
+    position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+    background: var(--ink); color: var(--cream-soft);
+    padding: 10px 18px; border-radius: 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase;
+    z-index: 200; opacity: 0; transition: opacity 0.3s;
+    box-shadow: 0 8px 24px var(--shadow-lg);
+  }
+  .toast.show { opacity: 1; }
+
+  .info-box { background: rgba(90, 107, 61, 0.08); border-left: 3px solid var(--moss); padding: 10px 12px; border-radius: 6px; font-size: 12px; color: var(--ink-soft); margin-bottom: 12px; line-height: 1.5; }
+
+  /* PLAN BANNER */
+  .plan-banner {
+    width: 100%;
+    background: linear-gradient(135deg, #3d4a28 0%, #5a6b3d 50%, #6b7d48 100%);
+    border: none;
+    border-radius: 18px;
+    padding: 0;
+    margin-bottom: 18px;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(61, 74, 40, 0.35);
+    overflow: hidden;
+    position: relative;
+    transition: transform 0.2s;
+  }
+  .plan-banner:active { transform: scale(0.98); }
+  .plan-banner::before {
+    content: ''; position: absolute;
+    top: -30%; right: -10%; width: 160px; height: 160px;
+    background: radial-gradient(circle, rgba(212, 144, 33, 0.25), transparent 70%);
+    pointer-events: none;
+  }
+  .plan-banner-inner {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 18px;
+    position: relative; z-index: 1;
+  }
+  .plan-banner-icon { font-size: 32px; flex-shrink: 0; }
+  .plan-banner-text { flex: 1; text-align: left; }
+  .plan-banner-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px; font-weight: 600;
+    color: var(--cream-soft);
+    letter-spacing: 0.02em;
+  }
+  .plan-banner-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: rgba(245, 236, 217, 0.7);
+    margin-top: 4px;
+  }
+  .plan-banner-arrow {
+    font-size: 28px; color: var(--gold-soft);
+    font-family: 'Cormorant Garamond', serif;
+  }
+
+  /* PLAN MODAL */
+  .plan-day-tabs {
+    display: flex; gap: 6px; overflow-x: auto;
+    margin: 0 -18px 14px; padding: 0 18px 4px;
+    scrollbar-width: none;
+  }
+  .plan-day-tabs::-webkit-scrollbar { display: none; }
+  .plan-day-tab {
+    flex: 0 0 auto;
+    background: var(--cream-soft);
+    border: 1px solid rgba(176, 136, 64, 0.3);
+    border-radius: 12px;
+    padding: 8px 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--ink-soft); cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    min-width: 56px;
+  }
+  .plan-day-tab .num { font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 600; }
+  .plan-day-tab.active { background: var(--terracotta); color: var(--cream-soft); border-color: var(--terracotta); }
+  .plan-day-tab.today {
+    box-shadow: 0 0 0 2px var(--gold);
+  }
+
+  .plan-meal {
+    background: var(--cream-soft);
+    border: 1px solid rgba(176, 136, 64, 0.22);
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+  }
+  .plan-meal-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 6px;
+  }
+  .plan-meal-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 17px; font-weight: 600;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .plan-meal-kcal {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; color: var(--terracotta);
+    background: rgba(184, 71, 42, 0.1);
+    padding: 3px 8px; border-radius: 8px;
+  }
+  .plan-meal-desc {
+    font-size: 13px; color: var(--ink-soft);
+    line-height: 1.5;
+  }
+
+  .plan-rules {
+    background: rgba(212, 144, 33, 0.1);
+    border: 1px solid rgba(212, 144, 33, 0.3);
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 14px;
+  }
+  .plan-rules-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; letter-spacing: 0.25em; text-transform: uppercase;
+    color: var(--terracotta); margin-bottom: 8px;
+  }
+  .plan-rules ul { font-size: 12px; color: var(--ink-soft); line-height: 1.6; padding-left: 16px; }
+  .plan-rules li { margin-bottom: 3px; }
+
+  .plan-summary {
+    display: flex; justify-content: space-around;
+    background: var(--cream-dark);
+    border-radius: 12px; padding: 10px;
+    margin-bottom: 12px;
+  }
+  .plan-summary-item { text-align: center; }
+  .plan-summary-val {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px; font-weight: 600; color: var(--ink);
+  }
+  .plan-summary-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--ink-mute);
+  }
+</style>
+</head>
+<body>
+
+<div class="grain"></div>
+
+<header>
+  <div class="lang-toggle">
+    <button class="lang-btn active" data-lang="es" onclick="setLang('es')">ES</button>
+    <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+  </div>
+  <div class="ornament">✦ · ✦ · ✦</div>
+  <h1>Anna<em>purna</em></h1>
+  <div class="tagline" data-i18n="tagline">Vegetariana · India · Sin filtros</div>
+</header>
+
+<nav class="tabs">
+  <button class="tab active" data-view="today">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+    <span data-i18n="tab_today">Hoy</span>
+  </button>
+  <button class="tab" data-view="pantry">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 7h18v13H3z"/><path d="M3 11h18"/><path d="M8 7V4h8v3"/></svg>
+    <span data-i18n="tab_pantry">Despensa</span>
+  </button>
+  <button class="tab" data-view="recipes">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 2v6a6 6 0 0 0 12 0V2"/><path d="M6 2h12"/><path d="M12 14v8"/></svg>
+    <span data-i18n="tab_recipes">Recetas</span>
+  </button>
+  <button class="tab" data-view="shop">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+    <span data-i18n="tab_shop">Compra</span>
+  </button>
+  <button class="tab" data-view="settings">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    <span data-i18n="tab_settings">Ajustes</span>
+  </button>
+</nav>
+
+<main>
+  <!-- TODAY VIEW -->
+  <section class="view active" id="view-today">
+    <div class="ring-card">
+      <div class="date-line">
+        <button onclick="changeDate(-1)">‹</button>
+        <span class="date" id="current-date">HOY</span>
+        <button onclick="changeDate(1)">›</button>
+      </div>
+      <div class="ring-svg-wrap">
+        <svg class="ring-svg" viewBox="0 0 200 200">
+          <defs>
+            <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#d49021"/>
+              <stop offset="100%" stop-color="#b8472a"/>
+            </linearGradient>
+          </defs>
+          <circle class="ring-bg" cx="100" cy="100" r="84"/>
+          <circle class="ring-fg" cx="100" cy="100" r="84" stroke-dasharray="527.79" stroke-dashoffset="527.79" id="ring-progress"/>
+        </svg>
+        <div class="ring-center">
+          <div class="ring-num" id="kcal-current">0</div>
+          <div class="ring-of"><span data-i18n="of">de</span> <span id="kcal-goal">2000</span> kcal</div>
+          <div class="ring-label" id="kcal-remaining">2000 restantes</div>
+        </div>
+      </div>
+      <div class="macros">
+        <div class="macro macro-p">
+          <div class="macro-val"><span id="prot-val">0</span><span class="unit">g</span></div>
+          <div class="macro-bar"><div class="macro-bar-fill" id="prot-bar" style="width:0%"></div></div>
+          <div class="macro-name" data-i18n="protein">Proteína</div>
+        </div>
+        <div class="macro macro-c">
+          <div class="macro-val"><span id="carb-val">0</span><span class="unit">g</span></div>
+          <div class="macro-bar"><div class="macro-bar-fill" id="carb-bar" style="width:0%"></div></div>
+          <div class="macro-name" data-i18n="carbs">Carbos</div>
+        </div>
+        <div class="macro macro-f">
+          <div class="macro-val"><span id="fat-val">0</span><span class="unit">g</span></div>
+          <div class="macro-bar"><div class="macro-bar-fill" id="fat-bar" style="width:0%"></div></div>
+          <div class="macro-name" data-i18n="fats">Grasas</div>
+        </div>
+      </div>
+    </div>
+
+    <button class="plan-banner" onclick="openPlan()">
+      <div class="plan-banner-inner">
+        <div class="plan-banner-icon">🌿</div>
+        <div class="plan-banner-text">
+          <div class="plan-banner-title" data-i18n="bank_title">Banco antiinflamatorio</div>
+          <div class="plan-banner-sub" data-i18n="bank_sub">32 opciones · vegetariano · 1.350–1.500 kcal</div>
+        </div>
+        <div class="plan-banner-arrow">›</div>
+      </div>
+    </button>
+
+    <div class="actions">
+      <button class="btn-action" onclick="openCameraDish()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        <span data-i18n="photo_dish">Foto al plato</span>
+      </button>
+      <button class="btn-action secondary" onclick="openSearchFood()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <span data-i18n="add_food">Añadir comida</span>
+      </button>
+    </div>
+
+    <div class="meals-list" id="meals-list"></div>
+  </section>
+
+  <!-- PANTRY VIEW -->
+  <section class="view" id="view-pantry">
+    <div class="section-title"><em data-i18n="pantry_title">Despensa</em></div>
+
+    <div class="actions">
+      <button class="btn-action" onclick="openCameraReceipt()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+        <span data-i18n="photo_receipt">Foto al ticket</span>
+      </button>
+      <button class="btn-action secondary" onclick="openAddPantry()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14"/></svg>
+        <span data-i18n="add_manual">Añadir manual</span>
+      </button>
+    </div>
+
+    <div id="pantry-content"></div>
+  </section>
+
+  <!-- RECIPES VIEW -->
+  <section class="view" id="view-recipes">
+    <div class="section-title"><span data-i18n="recipes_with">Recetas con</span> <em data-i18n="what_i_have">lo que tengo</em></div>
+    <div class="info-box" data-i18n="recipes_info">Sugerencias vegetarianas indias generadas según los ingredientes de tu despensa. Cuanto más completa esté, mejores serán las recetas.</div>
+    <button class="btn-action" style="width:100%;margin-bottom:16px;" onclick="generateRecipes()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2l2 7h7l-5.5 4 2 7L12 16l-5.5 4 2-7L3 9h7z"/></svg>
+      <span data-i18n="generate_recipes">Generar recetas</span>
+    </button>
+    <div id="recipes-content"></div>
+  </section>
+
+  <!-- SHOPPING VIEW -->
+  <section class="view" id="view-shop">
+    <div class="section-title"><span data-i18n="shop_list">Lista de</span> <em data-i18n="shop_list2">compra</em></div>
+    <div class="info-box" data-i18n="shop_info">Añade lo que necesites. Cuando hagas la compra y subas el ticket, los productos se moverán automáticamente a tu despensa.</div>
+    <div style="display:flex;gap:8px;margin-bottom:14px;">
+      <input class="input" id="shop-input" data-i18n-ph="shop_placeholder" placeholder="Ej. Lentejas rojas 500g" style="flex:1">
+      <button class="btn-action" style="padding:0 16px;" onclick="addShopItem()">+</button>
+    </div>
+    <div id="shop-content"></div>
+  </section>
+
+  <!-- SETTINGS VIEW -->
+  <section class="view" id="view-settings">
+    <div class="section-title"><span data-i18n="your">Tu</span> <em data-i18n="profile">perfil</em></div>
+
+    <div class="settings-card">
+      <div class="input-wrap">
+        <div class="input-label" data-i18n="kcal_goal">Objetivo de calorías diarias</div>
+        <input class="input" type="number" id="setting-kcal" value="2000">
+      </div>
+      <div class="row">
+        <div class="input-wrap">
+          <div class="input-label"><span data-i18n="protein">Proteína</span> (g)</div>
+          <input class="input" type="number" id="setting-prot" value="80">
+        </div>
+        <div class="input-wrap">
+          <div class="input-label"><span data-i18n="carbs">Carbos</span> (g)</div>
+          <input class="input" type="number" id="setting-carb" value="250">
+        </div>
+        <div class="input-wrap">
+          <div class="input-label"><span data-i18n="fats">Grasas</span> (g)</div>
+          <input class="input" type="number" id="setting-fat" value="65">
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-card">
+      <div class="input-label" style="margin-bottom:10px;" data-i18n="cuisine_pref">Estilo de comida preferido</div>
+      <div class="pill-row" id="cuisine-pills">
+        <div class="pill active" data-cuisine="india-norte" data-i18n="cuisine_north">India norte</div>
+        <div class="pill active" data-cuisine="india-sur" data-i18n="cuisine_south">India sur</div>
+        <div class="pill" data-cuisine="sindhi" data-i18n="cuisine_sindhi">Sindhi</div>
+        <div class="pill" data-cuisine="mediterraneo" data-i18n="cuisine_med">Mediterráneo</div>
+        <div class="pill" data-cuisine="fusion" data-i18n="cuisine_fusion">Fusión</div>
+      </div>
+    </div>
+
+    <div class="settings-card">
+      <div class="input-label" style="margin-bottom:10px;" data-i18n="restrictions">Restricciones / preferencias</div>
+      <div class="pill-row" id="restrict-pills">
+        <div class="pill active" data-r="vegetariano" data-i18n="r_veg">Vegetariano</div>
+        <div class="pill" data-r="vegano" data-i18n="r_vegan">Vegano</div>
+        <div class="pill" data-r="sin-cebolla-ajo" data-i18n="r_jain">Sin cebolla/ajo (jain)</div>
+        <div class="pill" data-r="sin-gluten" data-i18n="r_gluten">Sin gluten</div>
+        <div class="pill" data-r="sin-lactosa" data-i18n="r_lactose">Sin lactosa</div>
+        <div class="pill active" data-r="alto-proteina" data-i18n="r_protein">Alto en proteína</div>
+      </div>
+    </div>
+
+    <button class="btn-primary" onclick="saveSettings()" data-i18n="save_settings">Guardar ajustes</button>
+
+    <div style="margin-top:20px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.2em;color:var(--ink-mute);">
+      <button onclick="exportData()" style="background:none;border:none;color:var(--gold);font:inherit;cursor:pointer;padding:8px;" data-i18n="export_data">EXPORTAR DATOS</button>
+      ·
+      <button onclick="resetData()" style="background:none;border:none;color:var(--terracotta);font:inherit;cursor:pointer;padding:8px;" data-i18n="reset_data">REINICIAR</button>
+    </div>
+  </section>
+</main>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div id="modal-content"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<input type="file" id="camera-input" accept="image/*" capture="environment" style="display:none">
+
+<script>
+// =================== I18N ===================
+const I18N = {
+  es: {
+    // Header
+    tagline: 'Vegetariana · India · Sin filtros',
+    // Tabs
+    tab_today: 'Hoy', tab_pantry: 'Despensa', tab_recipes: 'Recetas', tab_shop: 'Compra', tab_settings: 'Ajustes',
+    // Today view
+    of: 'de', remaining: 'restantes', goal_covered: 'Objetivo cubierto',
+    protein: 'Proteína', carbs: 'Carbos', fats: 'Grasas',
+    bank_title: 'Banco antiinflamatorio', bank_sub: '32 opciones · vegetariano · 1.350–1.500 kcal',
+    photo_dish: 'Foto al plato', add_food: 'Añadir comida',
+    today: 'HOY', yesterday: 'AYER', tomorrow: 'MAÑANA',
+    total: 'Total', add: '+ añadir', empty: '— vacío —',
+    // Pantry
+    pantry_title: 'Despensa', photo_receipt: 'Foto al ticket', add_manual: 'Añadir manual',
+    pantry_empty: 'Tu despensa está vacía', pantry_empty_hint: 'FOTOGRAFÍA EL TICKET O AÑADE MANUAL',
+    cat_veg: 'Verduras', cat_fruit: 'Frutas', cat_legume: 'Legumbres', cat_grain: 'Cereales',
+    cat_dairy: 'Lácteos', cat_oil: 'Aceites', cat_spice: 'Especias', cat_other: 'Otros',
+    // Recipes
+    recipes_with: 'Recetas con', what_i_have: 'lo que tengo',
+    recipes_info: 'Sugerencias vegetarianas indias generadas según los ingredientes de tu despensa. Cuanto más completa esté, mejores serán las recetas.',
+    generate_recipes: 'Generar recetas',
+    recipes_empty: 'Genera recetas con un toque', recipes_empty_hint: 'SE BASARÁN EN TU DESPENSA',
+    ingredients: 'Ingredientes', steps: 'Pasos', you_lack: 'TE FALTA',
+    add_to_shop: 'Añadir a lista de compra', mark_done: 'Marcar como comida hecha',
+    add_pantry_first: 'Añade ingredientes a la despensa primero',
+    thinking_recipes: 'Pensando recetas…',
+    recipes_error: 'No se pudieron generar recetas. Comprueba tu conexión e inténtalo de nuevo.',
+    // Shop
+    shop_list: 'Lista de', shop_list2: 'compra',
+    shop_info: 'Añade lo que necesites. Cuando hagas la compra y subas el ticket, los productos se moverán automáticamente a tu despensa.',
+    shop_placeholder: 'Ej. Lentejas rojas 500g',
+    shop_empty: 'Lista vacía', shop_empty_hint: 'AÑADE LO QUE NECESITES COMPRAR',
+    // Settings
+    your: 'Tu', profile: 'perfil',
+    kcal_goal: 'Objetivo de calorías diarias',
+    cuisine_pref: 'Estilo de comida preferido',
+    cuisine_north: 'India norte', cuisine_south: 'India sur', cuisine_sindhi: 'Sindhi',
+    cuisine_med: 'Mediterráneo', cuisine_fusion: 'Fusión',
+    restrictions: 'Restricciones / preferencias',
+    r_veg: 'Vegetariano', r_vegan: 'Vegano', r_jain: 'Sin cebolla/ajo (jain)',
+    r_gluten: 'Sin gluten', r_lactose: 'Sin lactosa', r_protein: 'Alto en proteína',
+    save_settings: 'Guardar ajustes', export_data: 'EXPORTAR DATOS', reset_data: 'REINICIAR',
+    settings_saved: 'Ajustes guardados', data_exported: 'Datos exportados',
+    confirm_reset: '¿Borrar TODOS los datos? Esta acción no se puede deshacer.',
+    // Meals
+    breakfast: 'Desayuno', lunch: 'Almuerzo', snack: 'Merienda', dinner: 'Cena',
+    // Modals — Add food
+    add_food_title: 'Añadir', add_food_em: 'comida',
+    search_db: 'Buscar en base de datos',
+    search_placeholder: 'Ej. dal, paneer, chapati...',
+    or: '— O —', enter_manual: 'Introducir manualmente', cancel: 'Cancelar',
+    no_results: 'Sin resultados — prueba "manual"',
+    quantity: 'Cantidad consumida', unit: 'Unidad',
+    invalid_qty: 'Cantidad no válida',
+    add_btn: 'Añadir', added_to: 'Añadido a',
+    manual_food_title: 'Comida', manual_food_em: 'manual',
+    food_name: 'Nombre', food_name_ph: 'Ej. Khichdi casera',
+    ai_estimate: '✨ Estimar calorías con IA', ai_estimating: 'Calculando con IA…',
+    ai_need_name: 'Escribe primero el nombre del plato', ai_filled: 'Calorías estimadas — revísalas y ajusta si hace falta',
+    ai_search_hint: '¿No lo encuentras? Escríbelo arriba y deja que la IA calcule las calorías:',
+    qty_free: 'Cantidad (texto libre)', qty_free_ph: 'Ej. 1 cuenco, 200g, 1 plato',
+    kcal_label: 'Kcal', need_name: 'Pon un nombre', added: 'Añadido',
+    // Camera
+    analyzing_dish: 'Analizando', dish: 'plato', identifying: 'Identificando ingredientes…',
+    error_title: 'Error', dish_error: 'No se pudo analizar la imagen. Comprueba tu conexión o introdúcelo manualmente.',
+    manual: 'Manual',
+    total_estimated: 'Total estimado',
+    add_to_meal: 'Añadir a comida', confirm_add: 'Confirmar y añadir', dish_added: 'Plato añadido',
+    reading_receipt: 'Leyendo', receipt: 'ticket', extracting: 'Extrayendo productos…',
+    receipt_error: 'No se pudo leer el ticket. Prueba con una foto más clara o añade manualmente.',
+    products_detected: 'Productos', detected: 'detectados',
+    uncheck_unwanted: 'Desmarca lo que no quieras añadir a la despensa.',
+    add_to_pantry: 'Añadir a despensa', products_added: 'productos añadidos',
+    // Pantry add
+    add_pantry_title: 'Añadir a', add_pantry_em: 'despensa',
+    product: 'Producto', product_ph: 'Ej. Lentejas rojas',
+    qty_label: 'Cantidad', qty_ph: 'Ej. 500g, 1 paquete',
+    category: 'Categoría', deleted: 'Eliminado',
+    // Bank
+    bank_modal_title: 'Banco', bank_modal_em: 'antiinflamatorio',
+    bank_info: 'Toca cualquier opción para añadirla a tu diario de hoy. 1.350–1.500 kcal · 90–100g proteína',
+    rules_anti: '⚠ Reglas anti-barriga',
+    rule_1: 'Cena ligera y antes de las 20:30',
+    rule_2: 'Masticar despacio, sin pantallas',
+    rule_3: 'Nada de bebidas con gas ni edulcorantes (sorbitol/maltitol hinchan)',
+    rule_4: 'Sal moderada (la retención de líquidos abulta)',
+    rule_5: 'Caminar 10–15 min tras comer y cenar',
+    rule_6: 'Hidratación: 2–2.5 L agua + infusiones (hinojo, jengibre, menta)',
+    tap_to_add: 'tocar para añadir →',
+    recommended: 'recomendado 10:30',
+    close: 'Cerrar',
+    // Recipe details (from IA)
+    portions: 'porc',
+    // Categories pantry
+    cat_label_veg: 'verdura', cat_label_fruit: 'fruta', cat_label_legume: 'legumbre',
+    cat_label_grain: 'cereal', cat_label_dairy: 'lacteo', cat_label_oil: 'aceite',
+    cat_label_spice: 'especia', cat_label_other: 'otro',
+  },
+  en: {
+    // Header
+    tagline: 'Vegetarian · Indian · No filters',
+    // Tabs
+    tab_today: 'Today', tab_pantry: 'Pantry', tab_recipes: 'Recipes', tab_shop: 'Shop', tab_settings: 'Settings',
+    // Today view
+    of: 'of', remaining: 'remaining', goal_covered: 'Goal reached',
+    protein: 'Protein', carbs: 'Carbs', fats: 'Fats',
+    bank_title: 'Anti-inflammatory bank', bank_sub: '32 options · vegetarian · 1,350–1,500 kcal',
+    photo_dish: 'Photo of plate', add_food: 'Add food',
+    today: 'TODAY', yesterday: 'YESTERDAY', tomorrow: 'TOMORROW',
+    total: 'Total', add: '+ add', empty: '— empty —',
+    // Pantry
+    pantry_title: 'Pantry', photo_receipt: 'Photo of receipt', add_manual: 'Add manual',
+    pantry_empty: 'Your pantry is empty', pantry_empty_hint: 'PHOTOGRAPH THE RECEIPT OR ADD MANUALLY',
+    cat_veg: 'Vegetables', cat_fruit: 'Fruits', cat_legume: 'Legumes', cat_grain: 'Grains',
+    cat_dairy: 'Dairy', cat_oil: 'Oils', cat_spice: 'Spices', cat_other: 'Other',
+    // Recipes
+    recipes_with: 'Recipes with', what_i_have: 'what I have',
+    recipes_info: 'Indian vegetarian suggestions generated from your pantry ingredients. The more complete it is, the better the recipes.',
+    generate_recipes: 'Generate recipes',
+    recipes_empty: 'Generate recipes with one tap', recipes_empty_hint: 'BASED ON YOUR PANTRY',
+    ingredients: 'Ingredients', steps: 'Steps', you_lack: 'YOU NEED',
+    add_to_shop: 'Add to shopping list', mark_done: 'Mark as meal eaten',
+    add_pantry_first: 'Add ingredients to the pantry first',
+    thinking_recipes: 'Thinking up recipes…',
+    recipes_error: 'Could not generate recipes. Check your connection and try again.',
+    // Shop
+    shop_list: 'Shopping', shop_list2: 'list',
+    shop_info: 'Add what you need. When you shop and upload the receipt, products will automatically move to your pantry.',
+    shop_placeholder: 'e.g. Red lentils 500g',
+    shop_empty: 'Empty list', shop_empty_hint: 'ADD WHAT YOU NEED TO BUY',
+    // Settings
+    your: 'Your', profile: 'profile',
+    kcal_goal: 'Daily calorie goal',
+    cuisine_pref: 'Preferred cuisine style',
+    cuisine_north: 'North Indian', cuisine_south: 'South Indian', cuisine_sindhi: 'Sindhi',
+    cuisine_med: 'Mediterranean', cuisine_fusion: 'Fusion',
+    restrictions: 'Restrictions / preferences',
+    r_veg: 'Vegetarian', r_vegan: 'Vegan', r_jain: 'No onion/garlic (jain)',
+    r_gluten: 'Gluten-free', r_lactose: 'Lactose-free', r_protein: 'High protein',
+    save_settings: 'Save settings', export_data: 'EXPORT DATA', reset_data: 'RESET',
+    settings_saved: 'Settings saved', data_exported: 'Data exported',
+    confirm_reset: 'Delete ALL data? This cannot be undone.',
+    // Meals
+    breakfast: 'Breakfast', lunch: 'Lunch', snack: 'Snack', dinner: 'Dinner',
+    // Modals — Add food
+    add_food_title: 'Add', add_food_em: 'food',
+    search_db: 'Search in database',
+    search_placeholder: 'e.g. dal, paneer, chapati...',
+    or: '— OR —', enter_manual: 'Enter manually', cancel: 'Cancel',
+    no_results: 'No results — try "manual"',
+    quantity: 'Quantity consumed', unit: 'Unit',
+    invalid_qty: 'Invalid quantity',
+    add_btn: 'Add', added_to: 'Added to',
+    manual_food_title: 'Manual', manual_food_em: 'food',
+    food_name: 'Name', food_name_ph: 'e.g. Homemade khichdi',
+    ai_estimate: '✨ Estimate calories with AI', ai_estimating: 'Calculating with AI…',
+    ai_need_name: 'Type the dish name first', ai_filled: 'Calories estimated — review and adjust if needed',
+    ai_search_hint: "Can't find it? Type it above and let AI estimate the calories:",
+    qty_free: 'Quantity (free text)', qty_free_ph: 'e.g. 1 bowl, 200g, 1 plate',
+    kcal_label: 'Kcal', need_name: 'Add a name', added: 'Added',
+    // Camera
+    analyzing_dish: 'Analyzing', dish: 'plate', identifying: 'Identifying ingredients…',
+    error_title: 'Error', dish_error: 'Could not analyze the image. Check your connection or enter manually.',
+    manual: 'Manual',
+    total_estimated: 'Estimated total',
+    add_to_meal: 'Add to meal', confirm_add: 'Confirm and add', dish_added: 'Dish added',
+    reading_receipt: 'Reading', receipt: 'receipt', extracting: 'Extracting products…',
+    receipt_error: 'Could not read the receipt. Try a clearer photo or add manually.',
+    products_detected: 'Products', detected: 'detected',
+    uncheck_unwanted: 'Uncheck what you do not want to add to the pantry.',
+    add_to_pantry: 'Add to pantry', products_added: 'products added',
+    // Pantry add
+    add_pantry_title: 'Add to', add_pantry_em: 'pantry',
+    product: 'Product', product_ph: 'e.g. Red lentils',
+    qty_label: 'Quantity', qty_ph: 'e.g. 500g, 1 pack',
+    category: 'Category', deleted: 'Deleted',
+    // Bank
+    bank_modal_title: 'Anti-inflammatory', bank_modal_em: 'bank',
+    bank_info: 'Tap any option to add it to today\'s diary. 1,350–1,500 kcal · 90–100g protein',
+    rules_anti: '⚠ Anti-bloating rules',
+    rule_1: 'Light dinner before 8:30 PM',
+    rule_2: 'Chew slowly, no screens',
+    rule_3: 'No fizzy drinks or sweeteners (sorbitol/maltitol cause bloating)',
+    rule_4: 'Moderate salt (water retention adds to bloating)',
+    rule_5: 'Walk 10–15 min after lunch and dinner',
+    rule_6: 'Hydration: 2–2.5 L water + herbal teas (fennel, ginger, mint)',
+    tap_to_add: 'tap to add →',
+    recommended: 'recommended 10:30 AM',
+    close: 'Close',
+    // Recipe details
+    portions: 'serv',
+    // Categories pantry (values stored)
+    cat_label_veg: 'vegetable', cat_label_fruit: 'fruit', cat_label_legume: 'legume',
+    cat_label_grain: 'grain', cat_label_dairy: 'dairy', cat_label_oil: 'oil',
+    cat_label_spice: 'spice', cat_label_other: 'other',
+  }
+};
+
+let LANG = 'es';
+
+function t(key) {
+  return (I18N[LANG] && I18N[LANG][key]) || (I18N.es[key]) || key;
+}
+
+function setLang(lang) {
+  LANG = lang;
+  try { localStorage.setItem('annapurna_lang', lang); localStorage.setItem('suite_lang', lang); } catch(e){}
+  applyLang();
+  // re-render todo lo dinámico
+  renderToday();
+  renderPantry();
+  renderShop();
+  renderRecipes();
+  renderSettings();
+}
+
+function applyLang() {
+  document.documentElement.lang = LANG;
+  // botones del toggle
+  document.querySelectorAll('.lang-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.lang === LANG);
+  });
+  // textos data-i18n
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.dataset.i18n;
+    el.textContent = t(key);
+  });
+  // placeholders
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+    el.placeholder = t(el.dataset.i18nPh);
+  });
+}
+
+// =================== STATE ===================
+const STATE = {
+  meals: {},
+  pantry: [],
+  shop: [],
+  settings: {
+    kcalGoal: 2000,
+    protGoal: 80,
+    carbGoal: 250,
+    fatGoal: 65,
+    cuisines: ['india-norte', 'india-sur'],
+    restrictions: ['vegetariano', 'alto-proteina']
+  },
+  currentDate: new Date().toISOString().slice(0,10),
+};
+
+const MEAL_TYPES = [
+  { id: 'desayuno', key: 'breakfast', icon: '☕', time: '08:00' },
+  { id: 'comida', key: 'lunch', icon: '🍛', time: '14:00' },
+  { id: 'merienda', key: 'snack', icon: '🫖', time: '17:30' },
+  { id: 'cena', key: 'dinner', icon: '🌙', time: '21:00' },
+];
+
+// Base de datos local — alimentos vegetarianos indios comunes (por 100g salvo indicado)
+// name es bilingüe: { es: '...', en: '...' }
+const FOOD_DB = [
+  // Legumbres y dals
+  { name: { es: 'Dal de lentejas rojas (cocinado)', en: 'Red lentil dal (cooked)' }, kcal: 116, p: 9, c: 20, f: 0.4, unit: '100g' },
+  { name: { es: 'Chana masala', en: 'Chana masala' }, kcal: 165, p: 9, c: 22, f: 5, unit: '100g' },
+  { name: { es: 'Rajma (alubias rojas curry)', en: 'Rajma (red kidney bean curry)' }, kcal: 140, p: 8, c: 21, f: 3, unit: '100g' },
+  { name: { es: 'Lentejas verdes (cocidas)', en: 'Green lentils (cooked)' }, kcal: 116, p: 9, c: 20, f: 0.4, unit: '100g' },
+  { name: { es: 'Garbanzos cocidos', en: 'Cooked chickpeas' }, kcal: 164, p: 9, c: 27, f: 2.6, unit: '100g' },
+  { name: { es: 'Moong dal', en: 'Moong dal' }, kcal: 105, p: 7, c: 19, f: 0.4, unit: '100g' },
+  { name: { es: 'Toor dal (arhar)', en: 'Toor dal (arhar)' }, kcal: 343, p: 22, c: 63, f: 1.5, unit: { es: '100g seco', en: '100g dry' } },
+  // Cereales
+  { name: { es: 'Arroz basmati cocido', en: 'Cooked basmati rice' }, kcal: 121, p: 3, c: 25, f: 0.4, unit: '100g' },
+  { name: { es: 'Roti / chapati', en: 'Roti / chapati' }, kcal: 297, p: 11, c: 56, f: 7, unit: '100g' },
+  { name: { es: 'Chapati (1 unidad ~30g)', en: 'Chapati (1 piece ~30g)' }, kcal: 90, p: 3, c: 17, f: 2, unit: { es: '1 unidad', en: '1 piece' } },
+  { name: { es: 'Naan', en: 'Naan' }, kcal: 310, p: 9, c: 50, f: 8, unit: '100g' },
+  { name: { es: 'Paratha aloo', en: 'Aloo paratha' }, kcal: 260, p: 5, c: 35, f: 11, unit: '100g' },
+  { name: { es: 'Idli (1 unidad)', en: 'Idli (1 piece)' }, kcal: 39, p: 1.6, c: 8, f: 0.2, unit: { es: '1 unidad', en: '1 piece' } },
+  { name: { es: 'Dosa simple', en: 'Plain dosa' }, kcal: 168, p: 4, c: 28, f: 4, unit: '100g' },
+  { name: { es: 'Avena cocida', en: 'Cooked oats' }, kcal: 71, p: 2.5, c: 12, f: 1.5, unit: '100g' },
+  { name: { es: 'Poha (arroz aplanado)', en: 'Poha (flattened rice)' }, kcal: 130, p: 2.5, c: 28, f: 1, unit: '100g' },
+  { name: { es: 'Upma', en: 'Upma' }, kcal: 175, p: 4, c: 25, f: 7, unit: '100g' },
+  // Lácteos
+  { name: { es: 'Paneer', en: 'Paneer' }, kcal: 296, p: 18, c: 4, f: 23, unit: '100g' },
+  { name: { es: 'Yogur natural', en: 'Plain yogurt' }, kcal: 61, p: 3.5, c: 4.7, f: 3.3, unit: '100g' },
+  { name: { es: 'Lassi salado', en: 'Salted lassi' }, kcal: 60, p: 3, c: 5, f: 3, unit: '100g' },
+  { name: { es: 'Leche entera', en: 'Whole milk' }, kcal: 64, p: 3.4, c: 4.8, f: 3.7, unit: '100ml' },
+  { name: { es: 'Ghee', en: 'Ghee' }, kcal: 900, p: 0, c: 0, f: 100, unit: '100g' },
+  { name: { es: 'Ghee (1 cucharadita 5g)', en: 'Ghee (1 tsp 5g)' }, kcal: 45, p: 0, c: 0, f: 5, unit: '1 tsp' },
+  // Verduras / curries
+  { name: { es: 'Aloo gobi (patata coliflor)', en: 'Aloo gobi (potato cauliflower)' }, kcal: 95, p: 3, c: 13, f: 4, unit: '100g' },
+  { name: { es: 'Palak paneer', en: 'Palak paneer' }, kcal: 180, p: 9, c: 7, f: 13, unit: '100g' },
+  { name: { es: 'Baingan bharta', en: 'Baingan bharta' }, kcal: 90, p: 2, c: 9, f: 5, unit: '100g' },
+  { name: { es: 'Bhindi masala (okra)', en: 'Bhindi masala (okra)' }, kcal: 110, p: 2.5, c: 9, f: 7, unit: '100g' },
+  { name: { es: 'Mix vegetable curry', en: 'Mixed vegetable curry' }, kcal: 120, p: 3, c: 11, f: 7, unit: '100g' },
+  { name: { es: 'Sambar', en: 'Sambar' }, kcal: 70, p: 4, c: 10, f: 1.5, unit: '100g' },
+  { name: { es: 'Rasam', en: 'Rasam' }, kcal: 35, p: 1.5, c: 6, f: 0.5, unit: '100g' },
+  // Snacks y otros
+  { name: { es: 'Samosa (1 unidad)', en: 'Samosa (1 piece)' }, kcal: 260, p: 4, c: 24, f: 17, unit: { es: '1 unidad', en: '1 piece' } },
+  { name: { es: 'Pakora (100g)', en: 'Pakora (100g)' }, kcal: 315, p: 7, c: 25, f: 21, unit: '100g' },
+  { name: { es: 'Almendras', en: 'Almonds' }, kcal: 579, p: 21, c: 22, f: 50, unit: '100g' },
+  { name: { es: 'Almendras (10 unidades)', en: 'Almonds (10 pieces)' }, kcal: 70, p: 2.5, c: 2.5, f: 6, unit: { es: '10 ud', en: '10 pcs' } },
+  { name: { es: 'Nueces', en: 'Walnuts' }, kcal: 654, p: 15, c: 14, f: 65, unit: '100g' },
+  // Frutas
+  { name: { es: 'Plátano (1 mediano)', en: 'Banana (1 medium)' }, kcal: 105, p: 1.3, c: 27, f: 0.3, unit: { es: '1 ud', en: '1 pc' } },
+  { name: { es: 'Manzana (1 mediana)', en: 'Apple (1 medium)' }, kcal: 95, p: 0.5, c: 25, f: 0.3, unit: { es: '1 ud', en: '1 pc' } },
+  { name: { es: 'Mango (1 mediano)', en: 'Mango (1 medium)' }, kcal: 200, p: 2.8, c: 50, f: 1.3, unit: { es: '1 ud', en: '1 pc' } },
+  // Aceites
+  { name: { es: 'Aceite de oliva (1 cucharada)', en: 'Olive oil (1 tbsp)' }, kcal: 120, p: 0, c: 0, f: 14, unit: '1 tbsp' },
+];
+
+// Helpers para extraer texto bilingüe
+function bn(name) { return typeof name === 'string' ? name : (name[LANG] || name.es); }
+function bu(unit) { return typeof unit === 'string' ? unit : (unit[LANG] || unit.es); }
+
+// =================== BANCO DE OPCIONES ANTIINFLAMATORIAS ===================
+// Opciones vegetarianas antiinflamatorias para elegir cada día.
+// Diseñadas para mantener ~1.350-1.500 kcal/día con 90-100g proteína si se combinan así:
+//   Desayuno (~280-350) + Batido detox (~220) + Almuerzo (~450-540) + Merienda (~180-230) + Cena (~260-340)
+const PLAN_BANK = {
+  detoxBatido: {
+    name: { es: 'Batido detox antiinflamatorio', en: 'Anti-inflammatory detox smoothie' },
+    kcal: 220, p: 18, c: 22, f: 7,
+    desc: { es: 'Pera/manzana/papaya + 7-20 blueberries + chía + lino + whey vainilla + glutamina + cúrcuma + jengibre + pimienta + limón',
+            en: 'Pear/apple/papaya + 7-20 blueberries + chia + flax + vanilla whey + glutamine + turmeric + ginger + pepper + lemon' }
+  },
+
+  desayuno: [
+    { name: { es: 'Yogur griego con arándanos', en: 'Greek yogurt with blueberries' }, desc: { es: 'Yogur griego 0% (200g) + 1 cda chía + arándanos (80g) + canela. Café o té sin azúcar.', en: '0% Greek yogurt (200g) + 1 tbsp chia + blueberries (80g) + cinnamon. Unsweetened coffee or tea.' }, kcal: 280, p: 22, c: 28, f: 8 },
+    { name: { es: 'Tostada de aguacate', en: 'Avocado toast' }, desc: { es: 'Tostada pan centeno (1 reb) + ½ aguacate + tomate rallado + sal, pimienta. Té verde.', en: 'Rye bread toast (1 slice) + ½ avocado + grated tomato + salt, pepper. Green tea.' }, kcal: 280, p: 7, c: 28, f: 16 },
+    { name: { es: 'Porridge de avena', en: 'Oatmeal porridge' }, desc: { es: 'Avena (40g) con leche almendra, 1 cda crema cacahuete 100%, fresas (100g), canela.', en: 'Oats (40g) with almond milk, 1 tbsp 100% peanut butter, strawberries (100g), cinnamon.' }, kcal: 340, p: 11, c: 42, f: 14 },
+    { name: { es: 'Yogur con muesli', en: 'Yogurt with muesli' }, desc: { es: 'Yogur griego 0% (200g) + 30g muesli sin azúcar + frambuesas (80g).', en: '0% Greek yogurt (200g) + 30g unsweetened muesli + raspberries (80g).' }, kcal: 330, p: 22, c: 38, f: 9 },
+    { name: { es: 'Tostada con queso fresco', en: 'Toast with fresh cheese' }, desc: { es: 'Tostada centeno + queso fresco batido 0% + tomate + orégano + AOVE. Té verde.', en: 'Rye toast + 0% whipped fresh cheese + tomato + oregano + EVOO. Green tea.' }, kcal: 220, p: 14, c: 24, f: 7 },
+    { name: { es: 'Tortitas de avena con frutos rojos', en: 'Oat pancakes with berries' }, desc: { es: 'Avena (40g) + 1 plátano + 1 cdita levadura + canela, ligadas con 2 cdas yogur. Con frutos rojos.', en: 'Oats (40g) + 1 banana + 1 tsp baking powder + cinnamon, bound with 2 tbsp yogurt. With berries.' }, kcal: 310, p: 9, c: 55, f: 7 },
+    { name: { es: 'Bowl con granola', en: 'Granola bowl' }, desc: { es: 'Yogur griego 0% (200g) + 30g granola sin azúcar + kiwi + chía.', en: '0% Greek yogurt (200g) + 30g unsweetened granola + kiwi + chia.' }, kcal: 350, p: 20, c: 42, f: 10 },
+    { name: { es: 'Poha ligero', en: 'Light poha' }, desc: { es: 'Poha (50g) salteado con cúrcuma, cebolla, guisantes, limón y cacahuetes. Té masala sin azúcar.', en: 'Poha (50g) stir-fried with turmeric, onion, peas, lemon and peanuts. Unsweetened masala tea.' }, kcal: 290, p: 8, c: 48, f: 8 }
+  ],
+
+  almuerzo: [
+    { name: { es: 'Ensalada de garbanzos', en: 'Chickpea salad' }, desc: { es: 'Garbanzos (150g cocidos) + espinacas, tomate cherry, pepino, cebolla morada, 10 aceitunas, AOVE, limón, comino. + 1 manzana.', en: 'Chickpeas (150g cooked) + spinach, cherry tomato, cucumber, red onion, 10 olives, EVOO, lemon, cumin. + 1 apple.' }, kcal: 480, p: 18, c: 55, f: 18 },
+    { name: { es: 'Curry de lentejas rojas', en: 'Red lentil curry' }, desc: { es: 'Lentejas rojas (80g secas) con espinacas, tomate, jengibre, cúrcuma. + 3 cdas arroz basmati integral + ensalada.', en: 'Red lentils (80g dry) with spinach, tomato, ginger, turmeric. + 3 tbsp brown basmati rice + salad.' }, kcal: 470, p: 24, c: 70, f: 8 },
+    { name: { es: 'Bowl de quinoa y calabaza', en: 'Quinoa and pumpkin bowl' }, desc: { es: 'Quinoa (60g) + calabaza asada + edamame (80g) + rúcula + semillas calabaza + vinagreta mostaza-limón.', en: 'Quinoa (60g) + roasted pumpkin + edamame (80g) + arugula + pumpkin seeds + mustard-lemon vinaigrette.' }, kcal: 460, p: 22, c: 55, f: 16 },
+    { name: { es: 'Dahl de lentejas pardinas', en: 'Brown lentil dal' }, desc: { es: 'Lentejas pardinas (70g) con espinacas, tomate, cúrcuma, comino. + 2 cdas basmati + raita (pepino-yogur).', en: 'Brown lentils (70g) with spinach, tomato, turmeric, cumin. + 2 tbsp basmati + raita (cucumber-yogurt).' }, kcal: 470, p: 24, c: 65, f: 10 },
+    { name: { es: 'Bowl de garbanzos y boniato', en: 'Chickpea and sweet potato bowl' }, desc: { es: 'Garbanzos asados (150g) + boniato asado (150g) + kale con limón + granada + sésamo + tahini.', en: 'Roasted chickpeas (150g) + roasted sweet potato (150g) + kale with lemon + pomegranate + sesame + tahini.' }, kcal: 540, p: 18, c: 72, f: 18 },
+    { name: { es: 'Chana masala', en: 'Chana masala' }, desc: { es: 'Garbanzos (150g) en salsa de tomate, cebolla, jengibre, garam masala. + 3 cdas basmati + ensalada pepino.', en: 'Chickpeas (150g) in tomato sauce, onion, ginger, garam masala. + 3 tbsp basmati + cucumber salad.' }, kcal: 490, p: 20, c: 75, f: 10 },
+    { name: { es: 'Risotto de quinoa con setas', en: 'Quinoa risotto with mushrooms' }, desc: { es: 'Risotto quinoa con champiñones, espinacas y queso parmesano (15g). + ensalada rúcula-tomate.', en: 'Quinoa risotto with mushrooms, spinach and parmesan (15g). + arugula-tomato salad.' }, kcal: 460, p: 18, c: 60, f: 14 },
+    { name: { es: 'Sai bhaji con quinoa', en: 'Sai bhaji with quinoa' }, desc: { es: 'Sai bhaji sindhi (verduras y dal cocinadas) 300g + quinoa cocida (taza pequeña). Estilo casero.', en: 'Sindhi sai bhaji (cooked vegetables and dal) 300g + cooked quinoa (small cup). Homestyle.' }, kcal: 460, p: 22, c: 58, f: 14 }
+  ],
+
+  merienda: [
+    { name: { es: 'Batido detox antiinflamatorio', en: 'Anti-inflammatory detox smoothie' }, desc: { es: 'Pera/manzana/papaya + arándanos + chía + lino + whey vainilla + cúrcuma + jengibre + pimienta + limón.', en: 'Pear/apple/papaya + blueberries + chia + flax + vanilla whey + turmeric + ginger + pepper + lemon.' }, kcal: 220, p: 18, c: 22, f: 7, badge_key: 'recommended' },
+    { name: { es: 'Hummus con crudités', en: 'Hummus with crudités' }, desc: { es: 'Hummus (3 cdas) con palitos de zanahoria y apio.', en: 'Hummus (3 tbsp) with carrot and celery sticks.' }, kcal: 180, p: 6, c: 18, f: 10 },
+    { name: { es: 'Yogur con nueces', en: 'Yogurt with walnuts' }, desc: { es: 'Yogur griego 0% (150g) con 6 nueces.', en: '0% Greek yogurt (150g) with 6 walnuts.' }, kcal: 200, p: 14, c: 8, f: 12 },
+    { name: { es: 'Pera y almendras', en: 'Pear and almonds' }, desc: { es: '1 pera + 20 almendras crudas.', en: '1 pear + 20 raw almonds.' }, kcal: 230, p: 6, c: 28, f: 12 },
+    { name: { es: 'Manzana con crema almendras', en: 'Apple with almond butter' }, desc: { es: '1 manzana + 1 cda crema de almendras.', en: '1 apple + 1 tbsp almond butter.' }, kcal: 190, p: 4, c: 28, f: 9 },
+    { name: { es: 'Yogur con miel y nueces', en: 'Yogurt with honey and walnuts' }, desc: { es: 'Yogur griego 0% con 1 cdita miel y 4 nueces.', en: '0% Greek yogurt with 1 tsp honey and 4 walnuts.' }, kcal: 200, p: 14, c: 14, f: 10 },
+    { name: { es: 'Chocolate negro 85%', en: '85% dark chocolate' }, desc: { es: '2 onzas chocolate negro 85% + infusión.', en: '2 squares of 85% dark chocolate + herbal tea.' }, kcal: 130, p: 2, c: 8, f: 10 },
+    { name: { es: 'Shot jengibre-cúrcuma', en: 'Ginger-turmeric shot' }, desc: { es: 'Shot antiinflamatorio: jengibre rallado + cúrcuma + pimienta + limón + agua. Casi 0 kcal.', en: 'Anti-inflammatory shot: grated ginger + turmeric + pepper + lemon + water. Almost 0 kcal.' }, kcal: 15, p: 0, c: 3, f: 0 }
+  ],
+
+  cena: [
+    { name: { es: 'Crema y tofu plancha', en: 'Veggie cream and grilled tofu' }, desc: { es: 'Crema calabacín-puerro + tofu firme plancha (120g) con cúrcuma y pimienta negra. Infusión hinojo.', en: 'Zucchini-leek cream + grilled firm tofu (120g) with turmeric and black pepper. Fennel tea.' }, kcal: 320, p: 22, c: 18, f: 18 },
+    { name: { es: 'Tortilla de besan', en: 'Besan omelette' }, desc: { es: 'Tortilla de harina de garbanzo (40g) con espinacas y champiñones. Ensalada rúcula. Infusión jengibre.', en: 'Chickpea flour omelette (40g) with spinach and mushrooms. Arugula salad. Ginger tea.' }, kcal: 290, p: 16, c: 28, f: 12 },
+    { name: { es: 'Sopa miso con tofu', en: 'Miso soup with tofu' }, desc: { es: 'Sopa miso + tofu sedoso (100g) + wakame + cebolleta. + Brócoli vapor con aceite sésamo.', en: 'Miso soup + silken tofu (100g) + wakame + scallion. + Steamed broccoli with sesame oil.' }, kcal: 260, p: 18, c: 18, f: 14 },
+    { name: { es: 'Tofu bhurji', en: 'Tofu bhurji' }, desc: { es: 'Revuelto tofu (120g) con pimientos, cebolla, espinacas y cúrcuma. Ensalada verde. Infusión hinojo.', en: 'Scrambled tofu (120g) with peppers, onion, spinach and turmeric. Green salad. Fennel tea.' }, kcal: 300, p: 22, c: 16, f: 16 },
+    { name: { es: 'Palak paneer ligero', en: 'Light palak paneer' }, desc: { es: 'Crema coliflor con jengibre + paneer plancha (100g) con espinacas (sin nata). Infusión.', en: 'Cauliflower-ginger cream + grilled paneer (100g) with spinach (no cream). Herbal tea.' }, kcal: 340, p: 22, c: 16, f: 22 },
+    { name: { es: 'Tofu y verduras al horno', en: 'Baked tofu and vegetables' }, desc: { es: 'Verduras al horno (calabacín, berenjena, pimiento, cebolla) + tofu marinado en tamari y jengibre (120g).', en: 'Roasted vegetables (zucchini, eggplant, pepper, onion) + tofu marinated in tamari and ginger (120g).' }, kcal: 310, p: 20, c: 22, f: 16 },
+    { name: { es: 'Tempeh con verduras', en: 'Tempeh with vegetables' }, desc: { es: 'Crema guisantes-menta + tempeh salteado (120g) con verduras. Infusión.', en: 'Pea-mint cream + sautéed tempeh (120g) with vegetables. Herbal tea.' }, kcal: 320, p: 22, c: 22, f: 14 },
+    { name: { es: 'Khichdi ligero', en: 'Light khichdi' }, desc: { es: 'Khichdi (arroz basmati + moong dal + ghee 1 cdita + cúrcuma) con verduras al vapor. Haldi doodh opcional.', en: 'Khichdi (basmati rice + moong dal + 1 tsp ghee + turmeric) with steamed vegetables. Optional haldi doodh.' }, kcal: 340, p: 14, c: 52, f: 8 }
+  ]
+};
+
+// =================== STORAGE ===================
+const STORAGE_KEY = 'annapurna_v1';
+
+function save() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE)); } catch(e) { console.warn('Save failed', e); }
+}
+
+function load() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const data = JSON.parse(raw);
+      Object.assign(STATE, data);
+      STATE.currentDate = new Date().toISOString().slice(0,10); // siempre hoy al abrir
+    }
+  } catch(e) { console.warn('Load failed', e); }
+}
+
+// =================== TOAST ===================
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// =================== NAVIGATION ===================
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('view-' + tab.dataset.view).classList.add('active');
+    if (tab.dataset.view === 'pantry') renderPantry();
+    if (tab.dataset.view === 'shop') renderShop();
+    if (tab.dataset.view === 'recipes') renderRecipes();
+    if (tab.dataset.view === 'settings') renderSettings();
+  });
+});
+
+// =================== DATE ===================
+function changeDate(delta) {
+  const d = new Date(STATE.currentDate);
+  d.setDate(d.getDate() + delta);
+  STATE.currentDate = d.toISOString().slice(0,10);
+  renderToday();
+}
+
+function formatDate(d) {
+  const today = new Date().toISOString().slice(0,10);
+  const yest = new Date(); yest.setDate(yest.getDate()-1);
+  const tmrw = new Date(); tmrw.setDate(tmrw.getDate()+1);
+  if (d === today) return t('today');
+  if (d === yest.toISOString().slice(0,10)) return t('yesterday');
+  if (d === tmrw.toISOString().slice(0,10)) return t('tomorrow');
+  const dt = new Date(d);
+  return dt.toLocaleDateString(LANG === 'en' ? 'en-US' : 'es-ES', { weekday: 'short', day: 'numeric', month: 'short' }).toUpperCase();
+}
+
+// =================== TODAY VIEW ===================
+function getTodayMeals() {
+  if (!STATE.meals[STATE.currentDate]) {
+    STATE.meals[STATE.currentDate] = {};
+    MEAL_TYPES.forEach(m => STATE.meals[STATE.currentDate][m.id] = []);
+  }
+  // ensure all keys
+  MEAL_TYPES.forEach(m => {
+    if (!STATE.meals[STATE.currentDate][m.id]) STATE.meals[STATE.currentDate][m.id] = [];
+  });
+  return STATE.meals[STATE.currentDate];
+}
+
+function totalsForDay() {
+  const meals = getTodayMeals();
+  let kcal=0, p=0, c=0, f=0;
+  Object.values(meals).forEach(arr => {
+    arr.forEach(item => {
+      kcal += item.kcal || 0;
+      p += item.p || 0;
+      c += item.c || 0;
+      f += item.f || 0;
+    });
+  });
+  return { kcal: Math.round(kcal), p: Math.round(p), c: Math.round(c), f: Math.round(f) };
+}
+
+function renderToday() {
+  document.getElementById('current-date').textContent = formatDate(STATE.currentDate);
+  const totals = totalsForDay();
+  const s = STATE.settings;
+
+  document.getElementById('kcal-current').textContent = totals.kcal;
+  document.getElementById('kcal-goal').textContent = s.kcalGoal;
+  const remaining = Math.max(0, s.kcalGoal - totals.kcal);
+  document.getElementById('kcal-remaining').textContent = remaining > 0 ? remaining + ' ' + t('remaining') : t('goal_covered');
+
+  const pct = Math.min(1, totals.kcal / s.kcalGoal);
+  const circ = 2 * Math.PI * 84;
+  document.getElementById('ring-progress').style.strokeDashoffset = circ * (1 - pct);
+
+  document.getElementById('prot-val').textContent = totals.p;
+  document.getElementById('carb-val').textContent = totals.c;
+  document.getElementById('fat-val').textContent = totals.f;
+  document.getElementById('prot-bar').style.width = Math.min(100, (totals.p / s.protGoal) * 100) + '%';
+  document.getElementById('carb-bar').style.width = Math.min(100, (totals.c / s.carbGoal) * 100) + '%';
+  document.getElementById('fat-bar').style.width = Math.min(100, (totals.f / s.fatGoal) * 100) + '%';
+
+  const meals = getTodayMeals();
+  const list = document.getElementById('meals-list');
+  list.innerHTML = MEAL_TYPES.map(mt => {
+    const items = meals[mt.id] || [];
+    const totalKcal = Math.round(items.reduce((a,b) => a + (b.kcal||0), 0));
+    return `
+      <div class="meal">
+        <div class="meal-head">
+          <div class="meal-title"><span class="meal-icon">${mt.icon}</span>${t(mt.key)}</div>
+          <div class="meal-time">${mt.time}</div>
+        </div>
+        <div class="meal-items">
+          ${items.length === 0 ? '<div class="empty-meal">' + t('empty') + '</div>' :
+            items.map((it, idx) => `
+              <div class="meal-item">
+                <span class="meal-item-name">${bn(it.name)}</span>
+                <span class="meal-item-qty">${it.qty ? (typeof it.qty === 'string' ? it.qty : bn(it.qty)) : ''}</span>
+                <span class="meal-item-kcal">${Math.round(it.kcal)} kcal</span>
+                <button class="meal-item-del" onclick="removeMealItem('${mt.id}', ${idx})">×</button>
+              </div>
+            `).join('')
+          }
+        </div>
+        <div class="meal-total">
+          <span class="meal-total-label">${t('total')}</span>
+          <span class="meal-total-val">${totalKcal}<span class="unit"> kcal</span></span>
+        </div>
+        <button class="meal-add" onclick="openSearchFood('${mt.id}')">${t('add')}</button>
+      </div>
+    `;
+  }).join('');
+
+  save();
+}
+
+function removeMealItem(mealId, idx) {
+  const meals = getTodayMeals();
+  meals[mealId].splice(idx, 1);
+  renderToday();
+}
+
+// =================== MODAL ===================
+function openModal(html) {
+  document.getElementById('modal-content').innerHTML = html;
+  document.getElementById('modal').classList.add('active');
+}
+function closeModal() {
+  document.getElementById('modal').classList.remove('active');
+}
+document.getElementById('modal').addEventListener('click', (e) => {
+  if (e.target.id === 'modal') closeModal();
+});
+
+// =================== SEARCH FOOD ===================
+let currentMealForAdd = 'comida';
+
+function openSearchFood(mealId) {
+  currentMealForAdd = mealId || 'comida';
+  openModal(`
+    <div class="modal-title">${t('add_food_title')} <em>${t('add_food_em')}</em></div>
+    <div class="input-wrap">
+      <div class="input-label">${t('search_db')}</div>
+      <input class="input" id="food-search" placeholder="${t('search_placeholder')}">
+    </div>
+    <div class="food-results" id="food-results"></div>
+    <div style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.2em;color:var(--ink-mute);margin:10px 0;">${t('or')}</div>
+    <div class="hint" style="margin:0 0 8px;text-align:center;">${t('ai_search_hint')}</div>
+    <button class="btn-primary" id="ai-est-search" onclick="aiEstimateFromSearch()">${t('ai_estimate')}</button>
+    <button class="btn-primary btn-secondary" onclick="openManualFood()" style="margin-top:8px;">${t('enter_manual')}</button>
+    <button class="btn-primary btn-secondary" onclick="closeModal()" style="margin-top:8px;">${t('cancel')}</button>
+  `);
+  const input = document.getElementById('food-search');
+  input.focus();
+  input.addEventListener('input', renderFoodResults);
+  renderFoodResults();
+}
+
+function renderFoodResults() {
+  const q = (document.getElementById('food-search')?.value || '').toLowerCase().trim();
+  const results = !q ? FOOD_DB.slice(0, 12) :
+    FOOD_DB.filter(f => bn(f.name).toLowerCase().includes(q)).slice(0, 20);
+  document.getElementById('food-results').innerHTML = results.map((f, i) => `
+    <div class="food-result" onclick="pickFood(${FOOD_DB.indexOf(f)})">
+      <div class="food-result-name">${bn(f.name)}<span class="hint">${bu(f.unit)} · P ${f.p}g · C ${f.c}g · F ${f.f}g</span></div>
+      <div class="food-result-kcal">${f.kcal} kcal</div>
+    </div>
+  `).join('') || '<div class="empty-meal">' + t('no_results') + '</div>';
+}
+
+function pickFood(idx) {
+  const f = FOOD_DB[idx];
+  const u = bu(f.unit);
+  openModal(`
+    <div class="modal-title">${bn(f.name)}</div>
+    <div class="info-box">${LANG==='en'?'Values per':'Valores por'} <strong>${u}</strong>: ${f.kcal} kcal · P ${f.p}g · C ${f.c}g · F ${f.f}g</div>
+    <div class="input-wrap">
+      <div class="input-label">${t('quantity')}</div>
+      <input class="input" id="food-qty" type="number" value="${u.includes('100') ? 100 : 1}" step="any">
+    </div>
+    <div class="input-wrap">
+      <div class="input-label">${t('unit')}</div>
+      <input class="input" id="food-unit" value="${u.replace('100','').trim() || 'g'}" readonly>
+    </div>
+    <button class="btn-primary" onclick="addPickedFood(${idx})">${t('add_btn')}</button>
+    <button class="btn-primary btn-secondary" onclick="closeModal()" style="margin-top:8px;">${t('cancel')}</button>
+  `);
+}
+
+function addPickedFood(idx) {
+  const f = FOOD_DB[idx];
+  const u = bu(f.unit);
+  const qty = parseFloat(document.getElementById('food-qty').value) || 0;
+  if (qty <= 0) { toast(t('invalid_qty')); return; }
+
+  let multiplier;
+  if (u.includes('100')) multiplier = qty / 100;
+  else multiplier = qty / 1;
+
+  const item = {
+    name: f.name, // guardamos el objeto bilingüe
+    qty: qty + ' ' + (u.includes('100') ? 'g' : u.replace(/^\d+\s*/, '')),
+    kcal: f.kcal * multiplier,
+    p: f.p * multiplier,
+    c: f.c * multiplier,
+    f: f.f * multiplier,
+  };
+
+  const meals = getTodayMeals();
+  meals[currentMealForAdd].push(item);
+  closeModal();
+  renderToday();
+  const mt = MEAL_TYPES.find(m => m.id === currentMealForAdd);
+  toast(t('added_to') + ' ' + (mt ? t(mt.key) : ''));
+}
+
+// =================== BANCO DE OPCIONES ===================
+let currentMealCategory = 'desayuno';
+
+function openPlan() {
+  currentMealCategory = 'desayuno';
+  renderBankModal();
+}
+
+function renderBankModal() {
+  const categories = [
+    { id: 'desayuno', key: 'breakfast', icon: '☕' },
+    { id: 'almuerzo', key: 'lunch', icon: '🍛' },
+    { id: 'merienda', key: 'snack', icon: '🫖' },
+    { id: 'cena', key: 'dinner', icon: '🌙' }
+  ];
+
+  const tabsHtml = categories.map(c => `
+    <button class="plan-day-tab ${c.id === currentMealCategory ? 'active' : ''}" onclick="selectMealCategory('${c.id}')">
+      <span class="num">${c.icon}</span>
+      <span>${t(c.key)}</span>
+    </button>
+  `).join('');
+
+  const options = PLAN_BANK[currentMealCategory] || [];
+
+  const optionsHtml = options.map((m, idx) => `
+    <div class="plan-meal" onclick="pickBankOption('${currentMealCategory}', ${idx})" style="cursor:pointer;">
+      <div class="plan-meal-head">
+        <div class="plan-meal-name">${bn(m.name)}</div>
+        <span class="plan-meal-kcal">${m.kcal} kcal</span>
+      </div>
+      <div class="plan-meal-desc">${bn(m.desc)}</div>
+      <div style="display:flex;gap:6px;margin-top:6px;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--ink-mute);">
+        <span>P ${m.p}g</span>·<span>C ${m.c}g</span>·<span>F ${m.f}g</span>
+        ${m.badge_key ? `<span style="margin-left:auto;color:var(--gold);font-weight:500;">★ ${t(m.badge_key)}</span>` : '<span style="margin-left:auto;color:var(--terracotta);">' + t('tap_to_add') + '</span>'}
+      </div>
+    </div>
+  `).join('');
+
+  const rulesHtml = ['rule_1','rule_2','rule_3','rule_4','rule_5','rule_6'].map(k => `<li>${t(k)}</li>`).join('');
+
+  openModal(`
+    <div class="modal-title">${t('bank_modal_title')} <em>${t('bank_modal_em')}</em></div>
+    <div class="info-box">${t('bank_info')}</div>
+
+    <div class="plan-day-tabs">${tabsHtml}</div>
+
+    ${optionsHtml}
+
+    <div class="plan-rules">
+      <div class="plan-rules-title">${t('rules_anti')}</div>
+      <ul>${rulesHtml}</ul>
+    </div>
+
+    <button class="btn-primary btn-secondary" onclick="closeModal()">${t('close')}</button>
+  `);
+}
+
+function selectMealCategory(cat) {
+  currentMealCategory = cat;
+  renderBankModal();
+}
+
+function pickBankOption(category, idx) {
+  const opt = PLAN_BANK[category][idx];
+  const mealMap = { desayuno: 'desayuno', almuerzo: 'comida', merienda: 'merienda', cena: 'cena' };
+  const mealId = mealMap[category];
+
+  const meals = getTodayMeals();
+  if (!meals[mealId]) meals[mealId] = [];
+  meals[mealId].push({
+    name: opt.name,
+    qty: { es: 'porción banco', en: 'bank serving' },
+    kcal: opt.kcal,
+    p: opt.p,
+    c: opt.c,
+    f: opt.f
+  });
+
+  closeModal();
+  renderToday();
+  document.querySelector('.tab[data-view="today"]').click();
+  toast(bn(opt.name) + ' · ' + t('added'));
+}
+
+function openManualFood() {
+  openModal(`
+    <div class="modal-title">${t('manual_food_title')} <em>${t('manual_food_em')}</em></div>
+    <div class="input-wrap">
+      <div class="input-label">${t('food_name')}</div>
+      <input class="input" id="m-name" placeholder="${t('food_name_ph')}">
+    </div>
+    <div class="input-wrap">
+      <div class="input-label">${t('qty_free')}</div>
+      <input class="input" id="m-qty" placeholder="${t('qty_free_ph')}">
+    </div>
+    <div class="row">
+      <div class="input-wrap">
+        <div class="input-label">${t('kcal_label')}</div>
+        <input class="input" id="m-kcal" type="number" value="0">
+      </div>
+      <div class="input-wrap">
+        <div class="input-label">${t('protein')} (g)</div>
+        <input class="input" id="m-p" type="number" value="0">
+      </div>
+    </div>
+    <div class="row">
+      <div class="input-wrap">
+        <div class="input-label">${t('carbs')} (g)</div>
+        <input class="input" id="m-c" type="number" value="0">
+      </div>
+      <div class="input-wrap">
+        <div class="input-label">${t('fats')} (g)</div>
+        <input class="input" id="m-f" type="number" value="0">
+      </div>
+    </div>
+    <button class="btn-primary" id="ai-est-manual" onclick="aiEstimateManual()" style="background:var(--accent-2,#7a8450);">${t('ai_estimate')}</button>
+    <button class="btn-primary" onclick="addManualFood()" style="margin-top:8px;">${t('add_btn')}</button>
+    <button class="btn-primary btn-secondary" onclick="closeModal()" style="margin-top:8px;">${t('cancel')}</button>
+  `);
+}
+
+// Pide a Gemini las calorías/macros de un plato escrito a mano
+async function aiEstimateMacros(dish, qty) {
+  const prompt = `Estimate nutrition for this dish: "${dish}"${qty ? `, portion: "${qty}"` : ', for one typical serving'}. Likely Indian vegetarian cuisine. Respond ONLY with valid JSON, no markdown: {"kcal": 0, "p": 0, "c": 0, "f": 0, "qty": "portion description"}. p=protein g, c=carbs g, f=fat g. Be realistic for the stated portion (if none given, one typical home serving).`;
+  const txt = await callGemini([{ text: prompt }]);
+  const clean = txt.replace(/```json|```/g, '').trim();
+  const r = JSON.parse(clean);
+  return {
+    kcal: Math.round(parseFloat(r.kcal) || 0),
+    p: Math.round((parseFloat(r.p) || 0) * 10) / 10,
+    c: Math.round((parseFloat(r.c) || 0) * 10) / 10,
+    f: Math.round((parseFloat(r.f) || 0) * 10) / 10,
+    qty: r.qty || qty || ''
+  };
+}
+
+// Desde la búsqueda: coge lo escrito y abre el manual ya relleno
+async function aiEstimateFromSearch() {
+  const dish = (document.getElementById('food-search')?.value || '').trim();
+  if (!dish) { toast(t('ai_need_name')); return; }
+  const btn = document.getElementById('ai-est-search');
+  if (btn) { btn.disabled = true; btn.textContent = t('ai_estimating'); }
+  try {
+    const m = await aiEstimateMacros(dish, '');
+    openManualFood();
+    document.getElementById('m-name').value = dish;
+    document.getElementById('m-qty').value = m.qty;
+    document.getElementById('m-kcal').value = m.kcal;
+    document.getElementById('m-p').value = m.p;
+    document.getElementById('m-c').value = m.c;
+    document.getElementById('m-f').value = m.f;
+    toast(t('ai_filled'));
+  } catch (err) {
+    toast(aiErrorMsg(err) || t('dish_error'));
+    if (btn) { btn.disabled = false; btn.textContent = t('ai_estimate'); }
+  }
+}
+
+// Desde el formulario manual: rellena los macros con el nombre + cantidad ya escritos
+async function aiEstimateManual() {
+  const dish = (document.getElementById('m-name')?.value || '').trim();
+  if (!dish) { toast(t('ai_need_name')); return; }
+  const qty = (document.getElementById('m-qty')?.value || '').trim();
+  const btn = document.getElementById('ai-est-manual');
+  if (btn) { btn.disabled = true; btn.textContent = t('ai_estimating'); }
+  try {
+    const m = await aiEstimateMacros(dish, qty);
+    document.getElementById('m-kcal').value = m.kcal;
+    document.getElementById('m-p').value = m.p;
+    document.getElementById('m-c').value = m.c;
+    document.getElementById('m-f').value = m.f;
+    if (!qty && m.qty) document.getElementById('m-qty').value = m.qty;
+    toast(t('ai_filled'));
+  } catch (err) {
+    toast(aiErrorMsg(err) || t('dish_error'));
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = t('ai_estimate'); }
+  }
+}
+
+function addManualFood() {
+  const name = document.getElementById('m-name').value.trim();
+  if (!name) { toast(t('need_name')); return; }
+  const item = {
+    name,
+    qty: document.getElementById('m-qty').value.trim(),
+    kcal: parseFloat(document.getElementById('m-kcal').value) || 0,
+    p: parseFloat(document.getElementById('m-p').value) || 0,
+    c: parseFloat(document.getElementById('m-c').value) || 0,
+    f: parseFloat(document.getElementById('m-f').value) || 0,
+  };
+  getTodayMeals()[currentMealForAdd].push(item);
+  closeModal();
+  renderToday();
+  toast(t('added'));
+}
+
+// =================== IA (Gemini, clave compartida de Sangam) ===================
+function getGeminiKey() {
+  return localStorage.getItem('gemini_api_key') || localStorage.getItem('gf_gemini_key') || localStorage.getItem('apikey') || '';
+}
+
+async function callGemini(parts) {
+  const key = getGeminiKey();
+  if (!key) throw new Error('NO_KEY');
+  const resp = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + encodeURIComponent(key), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ parts }],
+      generationConfig: { responseMimeType: 'application/json' }
+    })
+  });
+  if (resp.status === 400 || resp.status === 403) throw new Error('BAD_KEY');
+  if (resp.status === 429) throw new Error('RATE_LIMIT');
+  if (!resp.ok) throw new Error('HTTP_' + resp.status);
+  const data = await resp.json();
+  const cand = data.candidates && data.candidates[0];
+  const text = ((cand && cand.content && cand.content.parts) || []).map(pt => pt.text || '').join('');
+  if (!text) throw new Error('EMPTY');
+  return text;
+}
+
+function aiErrorMsg(err) {
+  const m = err && err.message;
+  if (m === 'NO_KEY') return LANG === 'en'
+    ? 'Missing Gemini key. Save it once in Sangam Settings (gear tab) and it works for every app.'
+    : 'Falta la clave de Gemini. Guárdala una vez en Ajustes de Sangam (pestaña del engranaje) y vale para todas las apps.';
+  if (m === 'BAD_KEY') return LANG === 'en'
+    ? 'Invalid Gemini key. Check it in Sangam Settings.'
+    : 'Clave de Gemini no válida. Revísala en Ajustes de Sangam.';
+  if (m === 'RATE_LIMIT') return LANG === 'en'
+    ? 'Free daily limit reached. Try again tomorrow.'
+    : 'Has llegado al límite diario gratuito. Inténtalo mañana.';
+  return null;
+}
+
+// =================== CAMERA: DISH ===================
+let cameraMode = null; // 'dish' | 'receipt'
+
+function openCameraDish() {
+  cameraMode = 'dish';
+  document.getElementById('camera-input').click();
+}
+
+function openCameraReceipt() {
+  cameraMode = 'receipt';
+  document.getElementById('camera-input').click();
+}
+
+document.getElementById('camera-input').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async (ev) => {
+    const base64 = ev.target.result.split(',')[1];
+    const mediaType = file.type || 'image/jpeg';
+    if (cameraMode === 'dish') await analyzeDish(ev.target.result, base64, mediaType);
+    else if (cameraMode === 'receipt') await analyzeReceipt(ev.target.result, base64, mediaType);
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+});
+
+async function analyzeDish(dataUrl, base64, mediaType) {
+  openModal(`
+    <div class="modal-title">${t('analyzing_dish')} <em>${t('dish')}</em></div>
+    <img class="image-preview" src="${dataUrl}">
+    <div class="loading"><div class="spinner"></div><div class="loading-text">${t('identifying')}</div></div>
+  `);
+
+  const langInstruction = LANG === 'en'
+    ? 'Respond in English. Use English names for the dish and components.'
+    : 'Responde en español. Usa nombres en español para el plato y los componentes.';
+
+  try {
+    const aiText = await callGemini([
+      { inline_data: { mime_type: mediaType, data: base64 } },
+      { text: `Analyze this dish (likely Indian vegetarian cuisine). Identify components and estimate quantities per visible portion.
+
+${langInstruction}
+
+Respond ONLY with valid JSON, no extra text, no markdown:
+{
+  "plato": "descriptive dish name",
+  "componentes": [
+    { "nombre": "...", "cantidad_g": 150, "kcal": 200, "proteina_g": 8, "carbos_g": 30, "grasas_g": 5 }
+  ],
+  "totales": { "kcal": 0, "proteina_g": 0, "carbos_g": 0, "grasas_g": 0 },
+  "notas": "short note about the dish"
+}
+
+Be realistic with quantities based on plate size. If there is rice, dal, curry, chapati, paneer or other Indian components, identify them by name.` }
+    ]);
+    const clean = aiText.replace(/```json|```/g, '').trim();
+    const result = JSON.parse(clean);
+
+    renderDishResult(dataUrl, result);
+  } catch(err) {
+    console.error(err);
+    openModal(`
+      <div class="modal-title">${t('error_title')}</div>
+      <div class="info-box">${aiErrorMsg(err) || t('dish_error')}</div>
+      <button class="btn-primary" onclick="openManualFood()">${t('manual')}</button>
+      <button class="btn-primary btn-secondary" onclick="closeModal()" style="margin-top:8px;">${t('cancel')}</button>
+    `);
+  }
+}
+
+function renderDishResult(dataUrl, result) {
+  const componentsHtml = result.componentes.map((c, i) => `
+    <div class="meal-item">
+      <span class="meal-item-name">${c.nombre}</span>
+      <span class="meal-item-qty">${c.cantidad_g}g</span>
+      <span class="meal-item-kcal">${Math.round(c.kcal)} kcal</span>
+    </div>
+  `).join('');
+
+  openModal(`
+    <div class="modal-title">${result.plato}</div>
+    <img class="image-preview" src="${dataUrl}">
+    <div class="meal-items">${componentsHtml}</div>
+    <div class="meal-total" style="margin-top:10px;padding:10px;background:var(--cream-soft);border-radius:10px;">
+      <span class="meal-total-label">${t('total_estimated')}</span>
+      <span class="meal-total-val">${Math.round(result.totales.kcal)}<span class="unit"> kcal</span></span>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:8px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink-mute);">
+      <span>P ${Math.round(result.totales.proteina_g)}g</span>·
+      <span>C ${Math.round(result.totales.carbos_g)}g</span>·
+      <span>F ${Math.round(result.totales.grasas_g)}g</span>
+    </div>
+    ${result.notas ? `<div class="info-box" style="margin-top:12px;">${result.notas}</div>` : ''}
+    <div class="input-wrap" style="margin-top:14px;">
+      <div class="input-label">${t('add_to_meal')}</div>
+      <select class="select" id="dish-meal">
+        ${MEAL_TYPES.map(m => `<option value="${m.id}">${m.icon} ${t(m.key)}</option>`).join('')}
+      </select>
+    </div>
+    <button class="btn-primary" onclick='addDishToMeal(${JSON.stringify(result).replace(/'/g,"&apos;")})'>${t('confirm_add')}</button>
+    <button class="btn-primary btn-secondary" onclick="closeModal()" style="margin-top:8px;">${t('cancel')}</button>
+  `);
+}
+
+function addDishToMeal(result) {
+  const mealId = document.getElementById('dish-meal').value;
+  const item = {
+    name: result.plato,
+    qty: LANG === 'en' ? 'analyzed portion' : 'porción analizada',
+    kcal: result.totales.kcal,
+    p: result.totales.proteina_g,
+    c: result.totales.carbos_g,
+    f: result.totales.grasas_g,
+  };
+  if (!STATE.meals[STATE.currentDate]) STATE.meals[STATE.currentDate] = {};
+  if (!STATE.meals[STATE.currentDate][mealId]) STATE.meals[STATE.currentDate][mealId] = [];
+  STATE.meals[STATE.currentDate][mealId].push(item);
+  closeModal();
+  renderToday();
+  toast(t('dish_added'));
+}
+
+// =================== CAMERA: RECEIPT ===================
+async function analyzeReceipt(dataUrl, base64, mediaType) {
+  openModal(`
+    <div class="modal-title">${t('reading_receipt')} <em>${t('receipt')}</em></div>
+    <img class="image-preview" src="${dataUrl}">
+    <div class="loading"><div class="spinner"></div><div class="loading-text">${t('extracting')}</div></div>
+  `);
+
+  const langInstruction = LANG === 'en'
+    ? 'Respond with product names in English (translate them).'
+    : 'Responde con los nombres de productos en español.';
+
+  try {
+    const aiText = await callGemini([
+      { inline_data: { mime_type: mediaType, data: base64 } },
+      { text: `Extract edible products from this supermarket receipt (likely Spanish, supermarket in Spain). Ignore non-edible products (paper, cleaning, etc.).
+
+${langInstruction}
+
+Respond ONLY with valid JSON, no markdown:
+{
+  "productos": [
+    { "nombre": "clean normalized product name", "cantidad": "1 unit", "categoria": "verdura|fruta|legumbre|cereal|lacteo|aceite|especia|otro" }
+  ]
+}
+
+The category field must always be one of these exact Spanish keywords: verdura, fruta, legumbre, cereal, lacteo, aceite, especia, otro.
+Normalize product names (e.g. "TOM. RAMA 1KG" → "Cherry tomatoes" / "Tomate cherry"). If quantity is unclear, use "1 unit" / "1 ud".` }
+    ]);
+    const clean = aiText.replace(/```json|```/g, '').trim();
+    const result = JSON.parse(clean);
+
+    renderReceiptResult(dataUrl, result);
+  } catch(err) {
+    console.error(err);
+    openModal(`
+      <div class="modal-title">${t('error_title')}</div>
+      <div class="info-box">${aiErrorMsg(err) || t('receipt_error')}</div>
+      <button class="btn-primary" onclick="openAddPantry()">${t('add_manual')}</button>
+      <button class="btn-primary btn-secondary" onclick="closeModal()" style="margin-top:8px;">${t('cancel')}</button>
+    `);
+  }
+}
+
+function renderReceiptResult(dataUrl, result) {
+  const itemsHtml = result.productos.map((p, i) => `
+    <div class="food-result">
+      <label style="display:flex;align-items:center;gap:10px;width:100%;cursor:pointer;">
+        <input type="checkbox" checked data-idx="${i}" class="receipt-check">
+        <div class="food-result-name">${p.nombre}<span class="hint">${p.cantidad} · ${p.categoria}</span></div>
+      </label>
+    </div>
+  `).join('');
+
+  openModal(`
+    <div class="modal-title">${t('products_detected')} <em>${t('detected')}</em></div>
+    <img class="image-preview" src="${dataUrl}" style="max-height:160px;">
+    <div class="info-box">${t('uncheck_unwanted')}</div>
+    <div class="food-results" style="max-height:340px;">${itemsHtml}</div>
+    <button class="btn-primary" onclick='confirmReceipt(${JSON.stringify(result.productos).replace(/'/g,"&apos;")})'>${t('add_to_pantry')}</button>
+    <button class="btn-primary btn-secondary" onclick="closeModal()" style="margin-top:8px;">${t('cancel')}</button>
+  `);
+}
+
+function confirmReceipt(productos) {
+  const checks = document.querySelectorAll('.receipt-check');
+  let added = 0;
+  checks.forEach(chk => {
+    if (chk.checked) {
+      const idx = parseInt(chk.dataset.idx);
+      const p = productos[idx];
+      const existing = STATE.pantry.find(x => x.name.toLowerCase() === p.nombre.toLowerCase());
+      if (existing) {
+        existing.qty = p.cantidad;
+        existing.addedAt = Date.now();
+      } else {
+        STATE.pantry.push({ name: p.nombre, qty: p.cantidad, category: p.categoria, addedAt: Date.now() });
+      }
+      STATE.shop = STATE.shop.filter(s => !s.name.toLowerCase().includes(p.nombre.toLowerCase().split(' ')[0]));
+      added++;
+    }
+  });
+  closeModal();
+  save();
+  toast(added + ' ' + t('products_added'));
+  document.querySelector('.tab[data-view="pantry"]').click();
+}
+
+// =================== PANTRY ===================
+function renderPantry() {
+  const el = document.getElementById('pantry-content');
+  if (STATE.pantry.length === 0) {
+    el.innerHTML = `
+      <div class="empty-state">
+        <div class="icon">🌾</div>
+        <div class="text">${t('pantry_empty')}</div>
+        <div class="hint">${t('pantry_empty_hint')}</div>
+      </div>
+    `;
+    return;
+  }
+  const groups = {};
+  STATE.pantry.forEach((p, i) => {
+    const cat = p.category || 'otro';
+    if (!groups[cat]) groups[cat] = [];
+    groups[cat].push({ ...p, _idx: i });
+  });
+  const catOrder = ['verdura','fruta','legumbre','cereal','lacteo','aceite','especia','otro'];
+  const catKeys = { verdura:'cat_veg', fruta:'cat_fruit', legumbre:'cat_legume', cereal:'cat_grain', lacteo:'cat_dairy', aceite:'cat_oil', especia:'cat_spice', otro:'cat_other' };
+
+  el.innerHTML = catOrder.filter(c => groups[c]).map(cat => `
+    <div class="recipe-section-title" style="margin-top:18px;">${t(catKeys[cat])}</div>
+    <div class="pantry-grid">
+      ${groups[cat].map(p => `
+        <div class="pantry-item">
+          <button class="pantry-del" onclick="removePantry(${p._idx})">×</button>
+          <div class="pantry-name">${p.name}</div>
+          <div class="pantry-qty">${p.qty}</div>
+        </div>
+      `).join('')}
+    </div>
+  `).join('');
+}
+
+function removePantry(idx) {
+  STATE.pantry.splice(idx, 1);
+  save();
+  renderPantry();
+  toast(t('deleted'));
+}
+
+function openAddPantry() {
+  openModal(`
+    <div class="modal-title">${t('add_pantry_title')} <em>${t('add_pantry_em')}</em></div>
+    <div class="input-wrap">
+      <div class="input-label">${t('product')}</div>
+      <input class="input" id="pant-name" placeholder="${t('product_ph')}">
+    </div>
+    <div class="input-wrap">
+      <div class="input-label">${t('qty_label')}</div>
+      <input class="input" id="pant-qty" placeholder="${t('qty_ph')}">
+    </div>
+    <div class="input-wrap">
+      <div class="input-label">${t('category')}</div>
+      <select class="select" id="pant-cat">
+        <option value="legumbre">${t('cat_legume')}</option>
+        <option value="cereal">${t('cat_grain')}</option>
+        <option value="verdura">${t('cat_veg')}</option>
+        <option value="fruta">${t('cat_fruit')}</option>
+        <option value="lacteo">${t('cat_dairy')}</option>
+        <option value="aceite">${t('cat_oil')}</option>
+        <option value="especia">${t('cat_spice')}</option>
+        <option value="otro">${t('cat_other')}</option>
+      </select>
+    </div>
+    <button class="btn-primary" onclick="addPantryManual()">${t('add_btn')}</button>
+    <button class="btn-primary btn-secondary" onclick="closeModal()" style="margin-top:8px;">${t('cancel')}</button>
+  `);
+}
+
+function addPantryManual() {
+  const name = document.getElementById('pant-name').value.trim();
+  if (!name) { toast(t('need_name')); return; }
+  STATE.pantry.push({
+    name,
+    qty: document.getElementById('pant-qty').value.trim() || (LANG === 'en' ? '1 unit' : '1 ud'),
+    category: document.getElementById('pant-cat').value,
+    addedAt: Date.now()
+  });
+  save();
+  closeModal();
+  renderPantry();
+  toast(t('added'));
+}
+
+// =================== SHOPPING ===================
+function renderShop() {
+  const el = document.getElementById('shop-content');
+  if (STATE.shop.length === 0) {
+    el.innerHTML = `
+      <div class="empty-state">
+        <div class="icon">🛒</div>
+        <div class="text">Lista vacía</div>
+        <div class="hint">AÑADE LO QUE NECESITES COMPRAR</div>
+      </div>
+    `;
+    return;
+  }
+  el.innerHTML = `<div class="shop-list">${STATE.shop.map((s, i) => `
+    <div class="shop-item ${s.checked ? 'checked' : ''}">
+      <button class="shop-check" onclick="toggleShop(${i})"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12l4 4L20 6"/></svg></button>
+      <span class="shop-name">${s.name}</span>
+      <button class="shop-del" onclick="removeShop(${i})">×</button>
+    </div>
+  `).join('')}</div>`;
+}
+
+function addShopItem() {
+  const input = document.getElementById('shop-input');
+  const val = input.value.trim();
+  if (!val) return;
+  STATE.shop.push({ name: val, checked: false });
+  input.value = '';
+  save();
+  renderShop();
+}
+
+document.getElementById('shop-input').addEventListener('keypress', e => {
+  if (e.key === 'Enter') addShopItem();
+});
+
+function toggleShop(i) {
+  STATE.shop[i].checked = !STATE.shop[i].checked;
+  save();
+  renderShop();
+}
+
+function removeShop(i) {
+  STATE.shop.splice(i, 1);
+  save();
+  renderShop();
+}
+
+// =================== RECIPES ===================
+function renderRecipes() {
+  const cached = STATE.lastRecipes;
+  if (cached && cached.length) {
+    renderRecipeCards(cached);
+  } else {
+    document.getElementById('recipes-content').innerHTML = `
+      <div class="empty-state">
+        <div class="icon">🍲</div>
+        <div class="text">${t('recipes_empty')}</div>
+        <div class="hint">${t('recipes_empty_hint')}</div>
+      </div>
+    `;
+  }
+}
+
+async function generateRecipes() {
+  if (STATE.pantry.length === 0) {
+    toast(t('add_pantry_first'));
+    return;
+  }
+  document.getElementById('recipes-content').innerHTML = `
+    <div class="loading" style="background:rgba(255,252,244,0.7);border-radius:14px;border:1px solid rgba(176,136,64,0.22);">
+      <div class="spinner"></div>
+      <div class="loading-text">${t('thinking_recipes')}</div>
+    </div>
+  `;
+  try {
+    const pantryList = STATE.pantry.map(p => `${p.name} (${p.qty})`).join(', ');
+    const cuisines = STATE.settings.cuisines.join(', ');
+    const restrictions = STATE.settings.restrictions.join(', ');
+
+    const langInstruction = LANG === 'en'
+      ? 'Respond in English. Use English for dish names, ingredients and steps.'
+      : 'Responde en español. Usa español para nombres, ingredientes y pasos.';
+
+    const aiText = await callGemini([
+      { text: `I am a ${restrictions} cook. Pantry contents: ${pantryList}.
+
+Suggest 3 real recipes I can make with these ingredients. Cuisine style: ${cuisines}. Prioritize traditional vegetarian Indian recipes.
+
+${langInstruction}
+
+Respond ONLY with valid JSON, no markdown:
+{
+  "recetas": [
+    {
+      "nombre": "dish name",
+      "descripcion": "short description (1 sentence)",
+      "tiempo_min": 30,
+      "porciones": 2,
+      "kcal_por_porcion": 350,
+      "ingredientes": ["ingredient with quantity", "..."],
+      "pasos": ["step 1", "step 2", "..."],
+      "ingredientes_faltantes": ["what is missing from pantry, if anything"]
+    }
+  ]
+}
+
+Prioritize recipes where all ingredients are present. 
