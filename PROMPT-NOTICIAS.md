@@ -91,6 +91,27 @@ Cadena SER, El Confidencial, 20minutos, La Razón, El Periódico, Antena 3,
 laSexta, Expansión, HuffPost España, y en deporte Marca, AS, Mundo Deportivo,
 Sport, Relevo y Cricbuzz.
 
+### Cómo buscar la sociedad india
+
+Es el punto que más costó. Buscar "India sociedad" o "India desigualdad" en
+genérico devuelve informes y columnas sin fecha, no actualidad. Hay que atacar
+por temas concretos, nombrando el tema y la fecha de hoy, con el filtro de
+dominios puesto. Comprobado el 26 de agosto de 2026:
+
+| Tema | Consulta | Resultado |
+| ---- | -------- | --------- |
+| Sanidad | `India public health hospital patients <fecha>` | Muy bien: brotes, hospitales, avisos del IMA, decisiones estatales, con fecha |
+| Educación | `India schools students education news <fecha>` | Muy bien: exámenes, protestas estudiantiles, cierres, sucesos en campus |
+| Empleo | `India workers labour wages jobs <fecha>` | Flojo: páginas de tema y datos de encuestas viejas |
+| Medio ambiente | `India pollution water climate <fecha>` | Flojo: informes y reportajes, poca noticia del día |
+
+Cuando el día lo pida, el mismo patrón sirve para vivienda urbana, casta y
+discriminación, seguridad de las mujeres, o precios de alimentos y combustible.
+Al menos dos búsquedas temáticas antes de dar el bloque por cerrado, y lo que
+salga en formato informe va marcado como informe, nunca disfrazado de noticia.
+
+---
+
 Para India, Estados Unidos y deporte hay que buscar **con el filtro de dominios
 puesto**: sin él las
 búsquedas genéricas devuelven Wikipedia y refritos viejos en vez de la
