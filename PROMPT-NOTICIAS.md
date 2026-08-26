@@ -3,7 +3,43 @@
 Este es el texto que se ejecuta cada mañana de forma automática. También puedes
 pegarlo tal cual en una conversación nueva si quieres el repaso en otro momento.
 
+## Cómo está programado
+
+El planificador solo entiende UTC y no sabe nada del cambio de hora, así que
+una sola rutina se desviaría una hora en verano o en invierno. Para que salga
+siempre a las **8:30 reales de Canarias**, hay dos rutinas gemelas:
+
+| Rutina  | Cron (UTC)    | Genera el repaso en |
+| ------- | ------------- | ------------------- |
+| turno A | `30 7 * * *`  | horario de verano (WEST, UTC+1) |
+| turno B | `30 8 * * *`  | horario de invierno (WET, UTC+0) |
+
+Las dos arrancan cada día con la misma comprobación: miran la hora local con
+`TZ=Atlantic/Canary date` y, si no son las 8 y pico en Canarias, se paran sin
+hacer nada. Así solo una de las dos escribe el repaso, y lo hace a la hora
+buena los 365 días sin tocar nada en marzo ni en octubre.
+
+**Si cambias el prompt, cámbialo en las dos rutinas**: este fichero es la
+versión de referencia.
+
 ---
+
+## Comprobación de hora (va al principio de las dos rutinas)
+
+> PASO 0 — COMPROBACIÓN DE HORA (obligatorio, antes de nada).
+>
+> Ejecuta en bash: `TZ=Atlantic/Canary date '+%H:%M %Z'`
+>
+> Si la hora local de Canarias NO empieza por "08", NO hagas nada más: responde
+> únicamente "Turno equivocado: son las HH:MM en Canarias. El repaso de hoy lo
+> genera la otra rutina." y termina ahí. No busques nada, no escribas el repaso,
+> no toques el repositorio.
+>
+> Si la hora local sí empieza por "08", continúa con el repaso.
+
+---
+
+## El repaso
 
 Prepárame el repaso de noticias de esta mañana. Busca en la web: no contestes de
 memoria, todo tiene que salir de fuentes consultadas hoy.
