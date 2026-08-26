@@ -72,6 +72,10 @@ error, y buscar sin filtro los deja fuera igual. Comprobado el 26 de agosto de
   newslaundry.com, rediff.com, y pib.gov.in para notas oficiales del Gobierno.
 - *España*: eldiario.es, publico.es, elespanol.com, eleconomista.es, e
   infobae.com, que reproduce los teletipos de EFE.
+- *Estados Unidos*: npr.org, cbsnews.com, nbcnews.com, abcnews.go.com,
+  axios.com, thehill.com, washingtonpost.com, cnn.com, pbs.org y bloomberg.com.
+  Para sociedad en profundidad, kffhealthnews.org (sanidad), chalkbeat.org
+  (educación), stateline.org (los estados), propublica.org y statnews.com.
 - *Internacional*: cnnespanol.cnn.com, euronews.com, elfinanciero.com.mx.
 - *Deporte*: espncricinfo.com y espn.com para críquet, con marcador y crónica en
   vivo; skysports.com y besoccer.com para fútbol. El críquet indio también sale
@@ -81,12 +85,14 @@ error, y buscar sin filtro los deja fuera igual. Comprobado el 26 de agosto de
 **Bloqueados** (no gastar búsquedas en ellos): The Hindu, Indian Express, NDTV,
 Hindustan Times, Times of India, Livemint, India Today, Firstpost, News18,
 Telegraph India, Economic Times, Moneycontrol, PTI, The Hindu BusinessLine,
-Reuters, BBC, AP, El País, El Mundo, ABC, La Vanguardia, RTVE, Europa Press,
+Reuters, BBC, AP, The Guardian, New York Times, Los Angeles Times, USA Today,
+Politico, El País, El Mundo, ABC, La Vanguardia, RTVE, Europa Press,
 Cadena SER, El Confidencial, 20minutos, La Razón, El Periódico, Antena 3,
 laSexta, Expansión, HuffPost España, y en deporte Marca, AS, Mundo Deportivo,
 Sport, Relevo y Cricbuzz.
 
-Para India y para deporte hay que buscar **con el filtro de dominios puesto**: sin él las
+Para India, Estados Unidos y deporte hay que buscar **con el filtro de dominios
+puesto**: sin él las
 búsquedas genéricas devuelven Wikipedia y refritos viejos en vez de la
 actualidad del día. Esta lista envejece — si un bloque empieza a salir flojo,
 toca volver a comprobar qué medios siguen abiertos.
@@ -103,19 +109,30 @@ atrás pero hoy tiene una novedad relevante, entra, y explicas cuál es la noved
 Comprueba la fecha de cada pieza: lo de semanas atrás o no entra, o entra
 marcado explícitamente como contexto.
 
-**Cuatro bloques, en este orden**:
+**Qué es "sociedad" aquí**: sanidad, educación, vivienda, migración, trabajo y
+precios de la vida diaria, desigualdad, derechos, sucesos con alcance general y
+cultura cuando importe. No es prensa rosa ni sucesos locales.
 
-1. **India** — política, economía, sociedad, tecnología, lo que de verdad mueva el país.
-2. **España** — nacional, economía y sociedad: sanidad, educación, vivienda,
-   migración, sucesos con alcance general y cultura cuando importe. Lo
-   autonómico, solo si trasciende su comunidad.
-3. **Mundo** — lo importante de fuera de esos dos, incluida la UE.
-4. **Deporte** — solo críquet y fútbol. Nada de otros deportes.
+**Cinco bloques, en este orden**:
 
-**Límite duro: 30 noticias en total** sumando los cuatro bloques. Nunca más de
+1. **India** — política, economía, tecnología y **sociedad** con el mismo peso:
+   sanidad, educación, vivienda, migración interna, casta y desigualdad,
+   condiciones de trabajo, medio ambiente cuando afecta a la gente.
+2. **España** — nacional, economía y **sociedad**. Lo autonómico, solo si
+   trasciende su comunidad.
+3. **Estados Unidos** — política, economía y **sociedad**. Bloque propio, no va
+   dentro de Mundo.
+4. **Mundo** — lo importante de fuera de esos tres, incluida la UE.
+5. **Deporte** — solo críquet y fútbol. Nada de otros deportes.
+
+En los tres bloques de país, sociedad no es el relleno del final: si la mejor
+noticia del día en India o en Estados Unidos es de sanidad o de vivienda, va la
+primera.
+
+**Límite duro: 30 noticias en total** sumando los cinco bloques. Nunca más de
 30. Si el día da menos, das menos: prefiero 18 buenas que 30 rellenas. Reparto
-orientativo de hasta 8 en India, España y Mundo, y hasta 6 en Deporte, pero
-ajusta según el peso real del día.
+orientativo: 7 India, 7 España, 6 Estados Unidos, 5 Mundo, 5 Deporte, ajustando
+según el peso real del día.
 
 **Qué va en Deporte**:
 
@@ -148,7 +165,7 @@ consecuencias reales para mucha gente, no cuánto se comparte.
   temas polémicos contrasta al menos dos.
 - Si detectas que una noticia que circula mucho es dudosa o desmentida, dilo en
   vez de omitirla sin más.
-- Nada de relleno en los tres primeros bloques: famosos y sucesos menores solo
+- Nada de relleno en los cuatro primeros bloques: famosos y sucesos menores solo
   si de verdad son la noticia del día. El deporte tiene su propio bloque y ahí
   no aplica esta regla.
 - Si un bloque sale flojo porque no hay material, decirlo en una línea al final
