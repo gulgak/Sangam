@@ -25,9 +25,18 @@ versión de referencia.
 Las tres rutinas corren con **Sonnet 5** (`claude-sonnet-5`), que es lo que
 entra en el plan Pro. Se probó Opus 5 y se revirtió por coste.
 
-### Y aparte: el vigía de urgentes
+### Y aparte: el vigía de urgentes (DESACTIVADO)
 
-Una tercera rutina, independiente de esta, se ejecuta **cada dos horas** (cron
+**Está desactivado, no borrado.** La idea era que avisara al móvil o por correo
+cuando pasara algo grave fuera de la hora del repaso, pero ninguno de los dos
+canales entrega nada en esta cuenta: se probaron push y email, las ejecuciones
+terminan bien y marcadas para notificar, y no llega ni notificación ni correo.
+Los conectores (Gmail) no se pueden adjuntar a una rutina en esta organización,
+así que tampoco hay forma de que se mande el correo por su cuenta. Sin canal de
+entrega solo gastaba dinero, así que se apagó. Si algún día las notificaciones
+de las rutinas funcionan, se vuelve a activar tal cual está.
+
+Cuando estaba activo se ejecutaba **cada dos horas** (cron
 `2 */2 * * *`) y solo sirve para una cosa: avisar al móvil si pasa algo lo
 bastante grave como para no esperar al repaso de la mañana. Cubre una ventana de
 dos horas y media, solapada a propósito para que no se escape nada entre pasadas.
