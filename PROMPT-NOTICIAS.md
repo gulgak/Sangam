@@ -36,14 +36,11 @@ así que tampoco hay forma de que se mande el correo por su cuenta. Sin canal de
 entrega solo gastaba dinero, así que se apagó. Si algún día las notificaciones
 de las rutinas funcionan, se vuelve a activar tal cual está.
 
-Cuando estaba activo se ejecutaba **cada dos horas** (cron
-`2 */2 * * *`) y solo sirve para una cosa: avisar al móvil si pasa algo lo
-bastante grave como para no esperar al repaso de la mañana. Cubre una ventana de
-dos horas y media, solapada a propósito para que no se escape nada entre pasadas.
-Lleva su propio filtro (víctimas, guerra, caída de gobierno, emergencia, desplome
-económico) y su instrucción es callarse siempre que dude. Fuera de 8:00–23:00
-hora canaria comprueba la hora y se para sin buscar. Esa sí tiene la notificación
-push activada; el repaso de las 8:30 no.
+Cuando estaba activo se ejecutaba cada dos horas y cubría una ventana de dos
+horas y media, solapada a propósito para que no se escapara nada entre pasadas.
+Llevaba su propio filtro (víctimas, guerra, caída de gobierno, emergencia,
+desplome económico) y la instrucción de callarse siempre que dudara, y fuera de
+8:00–23:00 hora canaria se paraba sin buscar.
 
 ---
 
@@ -59,6 +56,35 @@ push activada; el repaso de las 8:30 no.
 > no toques el repositorio.
 >
 > Si la hora local sí empieza por "08", continúa con el repaso.
+
+---
+
+## Fuentes: cuáles se pueden leer y cuáles no
+
+Muchos medios bloquean al rastreador. Filtrar una búsqueda por ellos devuelve un
+error, y buscar sin filtro los deja fuera igual. Comprobado el 26 de agosto de
+2026, medio a medio.
+
+**Accesibles:**
+
+- *India*: indiatvnews.com, theprint.in, scroll.in, thewire.in,
+  business-standard.com, deccanherald.com, aninews.in, downtoearth.org.in,
+  newslaundry.com, rediff.com, y pib.gov.in para notas oficiales del Gobierno.
+- *España*: eldiario.es, publico.es, elespanol.com, eleconomista.es, e
+  infobae.com, que reproduce los teletipos de EFE.
+- *Internacional*: cnnespanol.cnn.com, euronews.com, elfinanciero.com.mx.
+
+**Bloqueados** (no gastar búsquedas en ellos): The Hindu, Indian Express, NDTV,
+Hindustan Times, Times of India, Livemint, India Today, Firstpost, News18,
+Telegraph India, Economic Times, Moneycontrol, PTI, The Hindu BusinessLine,
+Reuters, BBC, AP, El País, El Mundo, ABC, La Vanguardia, RTVE, Europa Press,
+Cadena SER, El Confidencial, 20minutos, La Razón, El Periódico, Antena 3,
+laSexta, Expansión, HuffPost España.
+
+Para India hay que buscar **con el filtro de dominios puesto**: sin él las
+búsquedas genéricas devuelven Wikipedia y refritos viejos en vez de la
+actualidad del día. Esta lista envejece — si un bloque empieza a salir flojo,
+toca volver a comprobar qué medios siguen abiertos.
 
 ---
 
