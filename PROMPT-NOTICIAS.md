@@ -1,4 +1,4 @@
-# Prompt — Repaso de noticias diario (8:30, hora de Canarias)
+# Prompt — Repaso de noticias diario (7:30, hora de Canarias)
 
 Este es el texto que se ejecuta cada mañana de forma automática. También puedes
 pegarlo tal cual en una conversación nueva si quieres el repaso en otro momento.
@@ -7,15 +7,15 @@ pegarlo tal cual en una conversación nueva si quieres el repaso en otro momento
 
 El planificador solo entiende UTC y no sabe nada del cambio de hora, así que
 una sola rutina se desviaría una hora en verano o en invierno. Para que salga
-siempre a las **8:30 reales de Canarias**, hay dos rutinas gemelas:
+siempre a las **7:30 reales de Canarias**, hay dos rutinas gemelas:
 
 | Rutina  | Cron (UTC)    | Genera el repaso en |
 | ------- | ------------- | ------------------- |
-| turno A | `30 7 * * *`  | horario de verano (WEST, UTC+1) |
-| turno B | `30 8 * * *`  | horario de invierno (WET, UTC+0) |
+| turno A | `30 6 * * *`  | horario de verano (WEST, UTC+1) |
+| turno B | `30 7 * * *`  | horario de invierno (WET, UTC+0) |
 
 Las dos arrancan cada día con la misma comprobación: miran la hora local con
-`TZ=Atlantic/Canary date` y, si no son las 8 y pico en Canarias, se paran sin
+`TZ=Atlantic/Canary date` y, si no son las 7 y pico en Canarias, se paran sin
 hacer nada. Así solo una de las dos escribe el repaso, y lo hace a la hora
 buena los 365 días sin tocar nada en marzo ni en octubre.
 
@@ -50,12 +50,12 @@ desplome económico) y la instrucción de callarse siempre que dudara, y fuera d
 >
 > Ejecuta en bash: `TZ=Atlantic/Canary date '+%H:%M %Z'`
 >
-> Si la hora local de Canarias NO empieza por "08", NO hagas nada más: responde
+> Si la hora local de Canarias NO empieza por "07", NO hagas nada más: responde
 > únicamente "Turno equivocado: son las HH:MM en Canarias. El repaso de hoy lo
 > genera la otra rutina." y termina ahí. No busques nada, no escribas el repaso,
 > no toques el repositorio.
 >
-> Si la hora local sí empieza por "08", continúa con el repaso.
+> Si la hora local sí empieza por "07", continúa con el repaso.
 
 ---
 
@@ -73,15 +73,20 @@ error, y buscar sin filtro los deja fuera igual. Comprobado el 26 de agosto de
 - *España*: eldiario.es, publico.es, elespanol.com, eleconomista.es, e
   infobae.com, que reproduce los teletipos de EFE.
 - *Internacional*: cnnespanol.cnn.com, euronews.com, elfinanciero.com.mx.
+- *Deporte*: espncricinfo.com y espn.com para críquet, con marcador y crónica en
+  vivo; skysports.com y besoccer.com para fútbol. El críquet indio también sale
+  bien en indiatvnews.com, aninews.in y deccanherald.com, y el fútbol español en
+  elespanol.com, eldiario.es y publico.es.
 
 **Bloqueados** (no gastar búsquedas en ellos): The Hindu, Indian Express, NDTV,
 Hindustan Times, Times of India, Livemint, India Today, Firstpost, News18,
 Telegraph India, Economic Times, Moneycontrol, PTI, The Hindu BusinessLine,
 Reuters, BBC, AP, El País, El Mundo, ABC, La Vanguardia, RTVE, Europa Press,
 Cadena SER, El Confidencial, 20minutos, La Razón, El Periódico, Antena 3,
-laSexta, Expansión, HuffPost España.
+laSexta, Expansión, HuffPost España, y en deporte Marca, AS, Mundo Deportivo,
+Sport, Relevo y Cricbuzz.
 
-Para India hay que buscar **con el filtro de dominios puesto**: sin él las
+Para India y para deporte hay que buscar **con el filtro de dominios puesto**: sin él las
 búsquedas genéricas devuelven Wikipedia y refritos viejos en vez de la
 actualidad del día. Esta lista envejece — si un bloque empieza a salir flojo,
 toca volver a comprobar qué medios siguen abiertos.
@@ -95,17 +100,33 @@ memoria, todo tiene que salir de fuentes consultadas hoy.
 
 **Alcance**: lo publicado en las últimas 24 horas. Si una historia es de días
 atrás pero hoy tiene una novedad relevante, entra, y explicas cuál es la novedad.
+Comprueba la fecha de cada pieza: lo de semanas atrás o no entra, o entra
+marcado explícitamente como contexto.
 
-**Tres bloques, en este orden**:
+**Cuatro bloques, en este orden**:
 
 1. **India** — política, economía, sociedad, tecnología, lo que de verdad mueva el país.
-2. **España** — nacional, economía, y lo autonómico solo si tiene alcance general.
+2. **España** — nacional, economía y sociedad: sanidad, educación, vivienda,
+   migración, sucesos con alcance general y cultura cuando importe. Lo
+   autonómico, solo si trasciende su comunidad.
 3. **Mundo** — lo importante de fuera de esos dos, incluida la UE.
+4. **Deporte** — solo críquet y fútbol. Nada de otros deportes.
 
-**Límite duro: 30 noticias en total.** Nunca más de 30. Si el día da menos, das
-menos: prefiero 18 buenas que 30 rellenas. Reparto orientativo de hasta 10 por
-bloque, pero ajusta según el peso real del día (si India está tranquila y el
-mundo arde, se nota en el reparto).
+**Límite duro: 30 noticias en total** sumando los cuatro bloques. Nunca más de
+30. Si el día da menos, das menos: prefiero 18 buenas que 30 rellenas. Reparto
+orientativo de hasta 8 en India, España y Mundo, y hasta 6 en Deporte, pero
+ajusta según el peso real del día.
+
+**Qué va en Deporte**:
+
+- *Críquet*: la selección india por encima de todo (Tests, ODI, T20, series en
+  curso), la IPL cuando esté en temporada, y los torneos internacionales
+  grandes. Marcador concreto y punto del partido, no una frase vaga: si un Test
+  está a mitad, el día de juego y quién manda.
+- *Fútbol*: LaLiga y la selección española, competiciones europeas, y fútbol
+  indio si hay algo que lo merezca.
+- Resultados y lo que cambia la clasificación o la eliminatoria. Lesiones y
+  sanciones importantes, sí. Rumores de fichajes y ruedas de prensa, no.
 
 **Orden**: dentro de cada bloque, de más importante a menos. Importante =
 consecuencias reales para mucha gente, no cuánto se comparte.
@@ -127,9 +148,14 @@ consecuencias reales para mucha gente, no cuánto se comparte.
   temas polémicos contrasta al menos dos.
 - Si detectas que una noticia que circula mucho es dudosa o desmentida, dilo en
   vez de omitirla sin más.
-- Nada de relleno: sucesos, famosos o deporte solo si de verdad es la noticia del día.
+- Nada de relleno en los tres primeros bloques: famosos y sucesos menores solo
+  si de verdad son la noticia del día. El deporte tiene su propio bloque y ahí
+  no aplica esta regla.
+- Si un bloque sale flojo porque no hay material, decirlo en una línea al final
+  de ese bloque en vez de rellenarlo con lo primero que haya.
 
 **Cierre**: si hay una noticia que domina el día, termina con una línea —
-**Lo único que hay que saber hoy:** ...— y si no la hay, dilo también.
+**Lo único que hay que saber hoy:** ...— y si no la hay, dilo también. El
+deporte no cuenta para esa línea salvo que sea algo histórico.
 
 Todo en español, tono directo, sin introducciones ni despedidas.
