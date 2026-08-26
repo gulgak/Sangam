@@ -22,6 +22,15 @@ buena los 365 días sin tocar nada en marzo ni en octubre.
 **Si cambias el prompt, cámbialo en las dos rutinas**: este fichero es la
 versión de referencia.
 
+### Y aparte: el vigía de urgentes
+
+Una tercera rutina, independiente de esta, se ejecuta **cada hora al minuto 58**
+y solo sirve para una cosa: avisar al móvil si pasa algo lo bastante grave como
+para no esperar al repaso de la mañana. Lleva su propio filtro (víctimas, guerra,
+caída de gobierno, emergencia, desplome económico) y su instrucción es callarse
+siempre que dude. Fuera de 8:00–23:00 hora canaria no avisa. Esa sí tiene la
+notificación push activada; el repaso de las 8:30 no.
+
 ---
 
 ## Comprobación de hora (va al principio de las dos rutinas)
