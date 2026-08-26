@@ -22,6 +22,10 @@ buena los 365 días sin tocar nada en marzo ni en octubre.
 **Si cambias el prompt, cámbialo en las dos rutinas**: este fichero es la
 versión de referencia.
 
+Las tres rutinas de noticias corren con **Opus 5** (`claude-opus-5`). Por
+defecto las sesiones programadas usan Sonnet; se cambió a propósito porque el
+repaso vive de decidir qué es importante y qué se queda fuera.
+
 ### Y aparte: el vigía de urgentes
 
 Una tercera rutina, independiente de esta, se ejecuta **cada dos horas** (cron
