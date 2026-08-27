@@ -22,6 +22,24 @@ buena los 365 días sin tocar nada en marzo ni en octubre.
 **Si cambias el prompt, cámbialo en las dos rutinas**: este fichero es la
 versión de referencia.
 
+### Dónde escribe el repaso
+
+Las dos rutinas van en modo **sesión persistente**: escriben dentro de una
+conversación que ya existe, no en una sesión nueva. Esto no es un detalle
+menor. El 27 de agosto la rutina se ejecutó perfectamente —pasó la
+comprobación de hora, buscó tres minutos y medio y escribió el repaso
+entero— pero abrió una sesión nueva para hacerlo, y ahí se quedó, sin leer.
+Como las notificaciones tampoco llegan, nadie se enteró de que estaba listo.
+Una rutina que escribe donde no miras es lo mismo que una rutina que no
+funciona.
+
+Al ir enganchadas a una conversación continua, el repaso además **ve el del
+día anterior**, así que puede evitar repetir noticia y dar seguimientos en
+una línea. De ahí la regla NO REPITAS LO DE AYER y el encabezado con fecha.
+
+Contrapartida: si esa conversación se archiva, la rutina se queda sin sitio
+donde escribir y hay que reengancharla.
+
 Las tres rutinas corren con **Sonnet 5** (`claude-sonnet-5`), que es lo que
 entra en el plan Pro. Se probó Opus 5 y se revirtió por coste.
 
