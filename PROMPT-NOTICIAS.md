@@ -20,27 +20,55 @@ hacer nada. Así solo una de las dos escribe el repaso, y lo hace a la hora
 buena los 365 días sin tocar nada en marzo ni en octubre.
 
 **Si cambias el prompt, cámbialo en las dos rutinas**: este fichero es la
-versión de referencia.
+versión de referencia. Las dos llevan exactamente el mismo texto.
 
-### Dónde escribe el repaso
+### Dónde escribe el repaso: una conversación nueva cada día
 
-Las dos rutinas van en modo **sesión persistente**: escriben dentro de una
-conversación que ya existe, no en una sesión nueva. Esto no es un detalle
-menor. El 27 de agosto la rutina se ejecutó perfectamente —pasó la
-comprobación de hora, buscó tres minutos y medio y escribió el repaso
-entero— pero abrió una sesión nueva para hacerlo, y ahí se quedó, sin leer.
-Como las notificaciones tampoco llegan, nadie se enteró de que estaba listo.
-Una rutina que escribe donde no miras es lo mismo que una rutina que no
-funciona.
+Cada disparo abre **su propia conversación**, con el nombre `Repaso — 9 de
+septiembre de 2026`. Así, al entrar en la lista y darle a play, sale el repaso
+de ese día sin tener que bajar por un hilo interminable.
 
-Al ir enganchadas a una conversación continua, el repaso además **ve el del
-día anterior**, así que puede evitar repetir noticia y dar seguimientos en
-una línea. De ahí la regla NO REPITAS LO DE AYER y el encabezado con fecha.
+Antes estaban las dos rutinas enganchadas a una sesión persistente, y antes de
+eso en sesión nueva sin más. Las dos versiones anteriores tenían un problema:
 
-Contrapartida: si esa conversación se archiva, la rutina se queda sin sitio
-donde escribir y hay que reengancharla.
+- **Sesión nueva sin nombre** (hasta el 27 de agosto): la rutina se ejecutaba
+  bien, buscaba tres minutos y medio y escribía el repaso entero, pero lo
+  dejaba en una conversación sin identificar que nadie miraba. Como las
+  notificaciones tampoco llegan, el repaso existía y no se leía.
+- **Sesión persistente** (del 27 de agosto al 9 de septiembre): resolvía lo
+  anterior y además dejaba ver el repaso del día anterior, pero lo apilaba
+  todo en un solo hilo cada vez más largo.
 
-Las tres rutinas corren con **Sonnet 5** (`claude-sonnet-5`), que es lo que
+La versión actual se queda con lo bueno de las dos: conversación separada y
+con fecha en el título, **y** memoria de ayer, porque el histórico ya no vive
+en el hilo sino en el repositorio.
+
+### El histórico: la carpeta `repasos/`
+
+Cada repaso se guarda en `repasos/AAAA-MM-DD.md` y se sube a la rama
+`claude/thirtieth-maximum-rn2em7`. Ese fichero es lo único que la conversación
+de mañana podrá ver del día de hoy, así que tiene que quedar completo.
+
+El orden de cada mañana es: comprobar la hora, ponerle nombre a la
+conversación, leer el fichero más reciente de `repasos/`, buscar, escribir el
+repaso en la respuesta y guardarlo en su fichero. De ahí siguen funcionando la
+regla NO REPITAS LO DE AYER y los seguimientos de una línea.
+
+Si algún día `repasos/` estuviera vacío o el fetch fallara, la rutina da el
+repaso igual, solo que sin comparar con el día anterior.
+
+### Efectos secundarios que hay que conocer
+
+- **El turno que no toca también abre una conversación.** Intenta renombrarse
+  a `(sin uso) turno equivocado — fecha` y archivarse sola para no ensuciar la
+  lista. Si esas herramientas no están disponibles en la sesión, se queda una
+  conversación corta con la frase de turno equivocado; es inofensiva.
+- **Renombrar es opcional.** Las sesiones que dispara una rutina pueden
+  arrancar sin las herramientas de `claude-code-remote`. El prompt lo
+  contempla: si no puede renombrarse, sigue con el repaso igual y deja el
+  encabezado con la fecha como primera línea.
+
+Las rutinas corren con el modelo por defecto de la cuenta, que es lo que
 entra en el plan Pro. Se probó Opus 5 y se revirtió por coste.
 
 ### Y aparte: el vigía de urgentes (DESACTIVADO)
@@ -62,18 +90,50 @@ desplome económico) y la instrucción de callarse siempre que dudara, y fuera d
 
 ---
 
-## Comprobación de hora (va al principio de las dos rutinas)
+## Los tres pasos previos (van al principio de las dos rutinas)
 
-> PASO 0 — COMPROBACIÓN DE HORA (obligatorio, antes de nada).
+> **PASO 0 — COMPROBACIÓN DE HORA** (obligatorio, antes de nada).
 >
 > Ejecuta en bash: `TZ=Atlantic/Canary date '+%H:%M %Z'`
 >
-> Si la hora local de Canarias NO empieza por "07", NO hagas nada más: responde
+> Si la hora local de Canarias NO empieza por "07", hoy no te toca. Responde
 > únicamente "Turno equivocado: son las HH:MM en Canarias. El repaso de hoy lo
 > genera la otra rutina." y termina ahí. No busques nada, no escribas el repaso,
 > no toques el repositorio.
+> Antes de terminar, y solo si tienes disponibles las herramientas de
+> `claude-code-remote`, renómbrate a "(sin uso) turno equivocado — AAAA-MM-DD" y
+> archívate para no ensuciar la lista. Si no están o fallan, sáltatelo.
 >
-> Si la hora local sí empieza por "07", continúa con el repaso.
+> Si la hora local sí empieza por "07", continúa.
+>
+> **PASO 1 — PON NOMBRE A LA CONVERSACIÓN** (antes de buscar nada).
+>
+> Si tienes `set_session_title`, llama antes a `get_session` sin `session_id` y
+> renómbrate a "Repaso — 9 de septiembre de 2026", con la fecha de hoy. Hazlo ya,
+> antes de buscar, para que el nombre aparezca aunque el repaso tarde. Si esa
+> herramienta no está o falla, sáltate el paso y sigue: en ese caso, que la
+> primera línea de la respuesta sea el encabezado con la fecha.
+>
+> **PASO 2 — LEE EL REPASO DE AYER.**
+>
+> ```
+> cd "$(git rev-parse --show-toplevel 2>/dev/null || echo /home/user/Sangam)"
+> git fetch origin claude/thirtieth-maximum-rn2em7
+> git checkout -B claude/thirtieth-maximum-rn2em7 origin/claude/thirtieth-maximum-rn2em7
+> ls repasos/ | tail -3
+> ```
+>
+> El fichero más reciente de `repasos/` es el repaso de ayer. Si la carpeta no
+> existe o está vacía, sigue igual y da el repaso sin comparar.
+
+Y al final, después de escribir el repaso en la respuesta:
+
+> **PASO 4 — GUARDA EL REPASO PARA MAÑANA.**
+>
+> Guarda el mismo texto en `repasos/AAAA-MM-DD.md`, con `git add repasos/`,
+> `git commit` y `git push -u origin claude/thirtieth-maximum-rn2em7`. Si el push
+> falla por red, reintenta cuatro veces esperando 2, 4, 8 y 16 segundos. No
+> modifiques ningún otro fichero y no abras ninguna pull request.
 
 ---
 
@@ -147,6 +207,11 @@ memoria, todo tiene que salir de fuentes consultadas hoy.
 atrás pero hoy tiene una novedad relevante, entra, y explicas cuál es la novedad.
 Comprueba la fecha de cada pieza: lo de semanas atrás o no entra, o entra
 marcado explícitamente como contexto.
+
+**No repitas lo de ayer**: el repaso anterior lo has leído en el PASO 2. No des
+la misma noticia salvo que hoy tenga una novedad de verdad, y entonces di cuál
+es. Si una historia sigue viva pero sin avances, va en una sola línea de
+seguimiento al final del bloque, no como titular nuevo.
 
 **Qué es "sociedad" aquí**: sanidad, educación, vivienda, migración, trabajo y
 precios de la vida diaria, desigualdad, derechos, sucesos con alcance general y
