@@ -5,71 +5,68 @@ pegarlo tal cual en una conversación nueva si quieres el repaso en otro momento
 
 ## Cómo está programado
 
-El planificador solo entiende UTC y no sabe nada del cambio de hora, así que
-una sola rutina se desviaría una hora en verano o en invierno. Para que salga
-siempre a las **7:30 reales de Canarias**, hay dos rutinas gemelas:
+Una sola rutina, **`Repaso de noticias — 7:30 Canarias`**, con cron `30 6 * * *`
+(06:30 UTC), que en horario de verano canario son las 7:30 de la mañana. Cada
+disparo abre **su propia conversación**: al entrar en la lista y darle a play
+sale el repaso de ese día, no un hilo interminable.
 
-| Rutina  | Cron (UTC)    | Genera el repaso en |
-| ------- | ------------- | ------------------- |
-| turno A | `30 6 * * *`  | horario de verano (WEST, UTC+1) |
-| turno B | `30 7 * * *`  | horario de invierno (WET, UTC+0) |
+La primera línea de la respuesta es siempre el encabezado con la fecha, porque
+el título de la conversación lo pone el sistema con el nombre de la rutina y no
+se puede cambiar desde dentro (ver más abajo).
 
-Las dos arrancan cada día con la misma comprobación: miran la hora local con
-`TZ=Atlantic/Canary date` y, si no son las 7 y pico en Canarias, se paran sin
-hacer nada. Así solo una de las dos escribe el repaso, y lo hace a la hora
-buena los 365 días sin tocar nada en marzo ni en octubre.
+### El cambio de hora
 
-**Si cambias el prompt, cámbialo en las dos rutinas**: este fichero es la
-versión de referencia. Las dos llevan exactamente el mismo texto.
+Antes había **dos rutinas gemelas** (06:30 y 07:30 UTC) con una comprobación de
+hora local, para acertar las 7:30 reales tanto en verano como en invierno sin
+tocar nada. Eso dejó de compensar el 10 de septiembre de 2026: al pasar a
+conversación nueva por disparo, la rutina que no tocaba abría igualmente su
+conversación y dejaba un cascarón vacío **todos los días**. 365 conversaciones
+basura al año para ahorrar dos ajustes.
 
-### Dónde escribe el repaso: una conversación nueva cada día
+Ahora hay una sola rutina y el ajuste se hace a mano dos veces al año:
 
-Cada disparo abre **su propia conversación**, con el nombre `Repaso — 9 de
-septiembre de 2026`. Así, al entrar en la lista y darle a play, sale el repaso
-de ese día sin tener que bajar por un hilo interminable.
+| Cuándo | Cron |
+| ------ | ---- |
+| horario de verano (WEST, UTC+1) | `30 6 * * *` |
+| horario de invierno (WET, UTC+0) | `30 7 * * *` |
 
-Antes estaban las dos rutinas enganchadas a una sesión persistente, y antes de
-eso en sesión nueva sin más. Las dos versiones anteriores tenían un problema:
-
-- **Sesión nueva sin nombre** (hasta el 27 de agosto): la rutina se ejecutaba
-  bien, buscaba tres minutos y medio y escribía el repaso entero, pero lo
-  dejaba en una conversación sin identificar que nadie miraba. Como las
-  notificaciones tampoco llegan, el repaso existía y no se leía.
-- **Sesión persistente** (del 27 de agosto al 9 de septiembre): resolvía lo
-  anterior y además dejaba ver el repaso del día anterior, pero lo apilaba
-  todo en un solo hilo cada vez más largo.
-
-La versión actual se queda con lo bueno de las dos: conversación separada y
-con fecha en el título, **y** memoria de ayer, porque el histórico ya no vive
-en el hilo sino en el repositorio.
+Para no depender de la memoria de nadie, el prompt lleva un **PASO 5** que
+comprueba la hora local y, si no son las 7 y pico, añade al final del repaso un
+aviso en negrita diciendo que hay que cambiar el cron. El fallo es suave: el
+repaso sale una hora antes, no deja de salir, y avisa de que le pasa.
 
 ### El histórico: la carpeta `repasos/`
 
-Cada repaso se guarda en `repasos/AAAA-MM-DD.md` y se sube a la rama
-`claude/thirtieth-maximum-rn2em7`. Ese fichero es lo único que la conversación
-de mañana podrá ver del día de hoy, así que tiene que quedar completo.
-
-El orden de cada mañana es: comprobar la hora, ponerle nombre a la
-conversación, leer el fichero más reciente de `repasos/`, buscar, escribir el
-repaso en la respuesta y guardarlo en su fichero. De ahí siguen funcionando la
+Como cada día empieza de cero, la memoria del día anterior no está en el hilo:
+está en el repositorio. Cada repaso se guarda en `repasos/AAAA-MM-DD.md` en la
+rama `claude/thirtieth-maximum-rn2em7`, y lo primero que hace la rutina, antes
+de buscar nada, es leer el fichero más reciente. De ahí siguen funcionando la
 regla NO REPITAS LO DE AYER y los seguimientos de una línea.
 
-Si algún día `repasos/` estuviera vacío o el fetch fallara, la rutina da el
-repaso igual, solo que sin comparar con el día anterior.
+Ese fichero es lo único que verá la conversación de mañana, así que tiene que
+quedar completo. Si el repositorio no estuviera disponible o `repasos/`
+estuviera vacío, la rutina da el repaso igual y lo dice en una línea al final.
 
-### Efectos secundarios que hay que conocer
+### Lo que no se puede hacer desde una sesión de rutina
 
-- **El turno que no toca también abre una conversación.** Intenta renombrarse
-  a `(sin uso) turno equivocado — fecha` y archivarse sola para no ensuciar la
-  lista. Si esas herramientas no están disponibles en la sesión, se queda una
-  conversación corta con la frase de turno equivocado; es inofensiva.
-- **Renombrar es opcional.** Las sesiones que dispara una rutina pueden
-  arrancar sin las herramientas de `claude-code-remote`. El prompt lo
-  contempla: si no puede renombrarse, sigue con el repaso igual y deja el
-  encabezado con la fecha como primera línea.
+Comprobado el 10 de septiembre de 2026, cuando el primer intento de
+conversación-por-día salió mal y hubo que rehacerlo:
 
-Las rutinas corren con el modelo por defecto de la cuenta, que es lo que
-entra en el plan Pro. Se probó Opus 5 y se revirtió por coste.
+- **La sesión no puede renombrarse.** Las conversaciones que abre una rutina
+  arrancan sin las herramientas de `claude-code-remote`, así que `get_session`,
+  `set_session_title` y `archive_session` no existen ahí. El título lo pone el
+  sistema, y es siempre el nombre de la rutina con un rayo delante:
+  `⚡ Repaso de noticias — 7:30 Canarias`. Por eso los días se distinguen por su
+  fecha en la lista y por el encabezado de la primera línea, no por el título.
+- **El repositorio hay que declararlo en la rutina.** Una rutina creada sin
+  `source_url` abre sesiones **sin repositorio dentro**: no hay clon, no hay
+  `repasos/` que leer y no hay adónde empujar. Fue exactamente lo que pasó el
+  10 de septiembre: la rutina se ejecutó, se marcó como correcta, gastó dos
+  minutos y no dejó nada. La rutina actual declara
+  `https://github.com/gulgak/Sangam` en la rama de trabajo.
+
+Las rutinas corren con el modelo por defecto de la cuenta, que es lo que entra
+en el plan Pro. Se probó Opus 5 y se revirtió por coste.
 
 ### Y aparte: el vigía de urgentes (DESACTIVADO)
 
@@ -90,50 +87,41 @@ desplome económico) y la instrucción de callarse siempre que dudara, y fuera d
 
 ---
 
-## Los tres pasos previos (van al principio de las dos rutinas)
+## Los pasos que envuelven al repaso
 
-> **PASO 0 — COMPROBACIÓN DE HORA** (obligatorio, antes de nada).
->
-> Ejecuta en bash: `TZ=Atlantic/Canary date '+%H:%M %Z'`
->
-> Si la hora local de Canarias NO empieza por "07", hoy no te toca. Responde
-> únicamente "Turno equivocado: son las HH:MM en Canarias. El repaso de hoy lo
-> genera la otra rutina." y termina ahí. No busques nada, no escribas el repaso,
-> no toques el repositorio.
-> Antes de terminar, y solo si tienes disponibles las herramientas de
-> `claude-code-remote`, renómbrate a "(sin uso) turno equivocado — AAAA-MM-DD" y
-> archívate para no ensuciar la lista. Si no están o fallan, sáltatelo.
->
-> Si la hora local sí empieza por "07", continúa.
->
-> **PASO 1 — PON NOMBRE A LA CONVERSACIÓN** (antes de buscar nada).
->
-> Si tienes `set_session_title`, llama antes a `get_session` sin `session_id` y
-> renómbrate a "Repaso — 9 de septiembre de 2026", con la fecha de hoy. Hazlo ya,
-> antes de buscar, para que el nombre aparezca aunque el repaso tarde. Si esa
-> herramienta no está o falla, sáltate el paso y sigue: en ese caso, que la
-> primera línea de la respuesta sea el encabezado con la fecha.
->
-> **PASO 2 — LEE EL REPASO DE AYER.**
+> **PASO 1 — SITÚATE.**
 >
 > ```
-> cd "$(git rev-parse --show-toplevel 2>/dev/null || echo /home/user/Sangam)"
-> git fetch origin claude/thirtieth-maximum-rn2em7
-> git checkout -B claude/thirtieth-maximum-rn2em7 origin/claude/thirtieth-maximum-rn2em7
+> TZ=Atlantic/Canary date '+%H:%M %Z · %A %d de %B de %Y'
+> cd "$(git rev-parse --show-toplevel 2>/dev/null || echo .)" && pwd
+> git pull --ff-only 2>&1 | tail -2
 > ls repasos/ | tail -3
 > ```
 >
-> El fichero más reciente de `repasos/` es el repaso de ayer. Si la carpeta no
-> existe o está vacía, sigue igual y da el repaso sin comparar.
+> Apunta la hora local: hace falta en el PASO 5.
+>
+> **PASO 2 — LEE EL REPASO DE AYER.**
+>
+> El fichero más reciente de `repasos/` es el repaso de ayer. Si el repositorio
+> no está o la carpeta está vacía, no te pares: da el repaso igual, sin
+> comparar, y dilo en una línea al final.
 
-Y al final, después de escribir el repaso en la respuesta:
+Y después de escribir el repaso en la respuesta:
 
 > **PASO 4 — GUARDA EL REPASO PARA MAÑANA.**
 >
 > Guarda el mismo texto en `repasos/AAAA-MM-DD.md`, con `git add repasos/`,
-> `git commit` y `git push -u origin claude/thirtieth-maximum-rn2em7`. Si el push
-> falla por red, reintenta cuatro veces esperando 2, 4, 8 y 16 segundos. No
-> modifiques ningún otro fichero y no abras ninguna pull request.
+> `git commit` y `git push -u origin claude/thirtieth-maximum-rn2em7`. Si el
+> push falla por red, reintenta cuatro veces esperando 2, 4, 8 y 16 segundos.
+> Si falla por permisos o por no haber repositorio, dilo en una línea al final
+> del repaso en vez de esconderlo. No toques ningún otro fichero y no abras
+> ninguna pull request.
+>
+> **PASO 5 — AVISO DE CAMBIO DE HORA.**
+>
+> Si la hora local del PASO 1 no empezaba por "07", añade al final, en negrita:
+> "**Aviso: hoy el repaso ha salido a las HH:MM de Canarias, no a las 7:30. Hay
+> que cambiar el cron de la rutina.**" Si empezaba por "07", no digas nada.
 
 ---
 
