@@ -5,65 +5,69 @@ pegarlo tal cual en una conversación nueva si quieres el repaso en otro momento
 
 ## Cómo está programado
 
-Una sola rutina, **`Repaso de noticias — 7:30 Canarias`**, con cron `30 6 * * *`
-(06:30 UTC), que en horario de verano canario son las 7:30 de la mañana. Cada
-disparo abre **su propia conversación**: al entrar en la lista y darle a play
-sale el repaso de ese día, no un hilo interminable.
+Dos rutinas gemelas, `30 6 * * *` y `30 7 * * *` (UTC), que escriben las dos en
+**la misma conversación**. El planificador solo entiende UTC y no sabe nada del
+cambio de hora, así que una sola rutina se desviaría una hora media año. Con
+dos, y una comprobación de la hora local al principio, el repaso sale a las
+**7:30 reales de Canarias** los 365 días sin tocar nada en marzo ni en octubre.
 
-La primera línea de la respuesta es siempre el encabezado con la fecha, porque
-el título de la conversación lo pone el sistema con el nombre de la rutina y no
-se puede cambiar desde dentro (ver más abajo).
+| Rutina  | Cron (UTC)   | Escribe el repaso en |
+| ------- | ------------ | -------------------- |
+| turno A | `30 6 * * *` | horario de verano (WEST, UTC+1) |
+| turno B | `30 7 * * *` | horario de invierno (WET, UTC+0) |
 
-### El cambio de hora
+La que no toca contesta una sola línea ("Turno equivocado…") y se calla. Cuesta
+una línea al día en el hilo y a cambio no hay que acordarse de nada.
 
-Antes había **dos rutinas gemelas** (06:30 y 07:30 UTC) con una comprobación de
-hora local, para acertar las 7:30 reales tanto en verano como en invierno sin
-tocar nada. Eso dejó de compensar el 10 de septiembre de 2026: al pasar a
-conversación nueva por disparo, la rutina que no tocaba abría igualmente su
-conversación y dejaba un cascarón vacío **todos los días**. 365 conversaciones
-basura al año para ahorrar dos ajustes.
+**Si cambias el prompt, cámbialo en las dos rutinas**: este fichero es la
+versión de referencia. Las dos llevan exactamente el mismo texto.
 
-Ahora hay una sola rutina y el ajuste se hace a mano dos veces al año:
+## Un solo hilo, con los días bien separados
 
-| Cuándo | Cron |
-| ------ | ---- |
-| horario de verano (WEST, UTC+1) | `30 6 * * *` |
-| horario de invierno (WET, UTC+0) | `30 7 * * *` |
+Todos los repasos van seguidos en una misma conversación, en modo **sesión
+persistente**. Para que no se conviertan en una pared de texto, cada día empieza
+con un corte visible: una línea horizontal, un titular con la fecha en
+mayúsculas y otra línea horizontal, y se cierra con una tercera al terminar.
 
-Para no depender de la memoria de nadie, el prompt lleva un **PASO 5** que
-comprueba la hora local y, si no son las 7 y pico, añade al final del repaso un
-aviso en negrita diciendo que hay que cambiar el cron. El fallo es suave: el
-repaso sale una hora antes, no deja de salir, y avisa de que le pasa.
-
-### El histórico: la carpeta `repasos/`
-
-Como cada día empieza de cero, la memoria del día anterior no está en el hilo:
-está en el repositorio. Cada repaso se guarda en `repasos/AAAA-MM-DD.md` en la
-rama `claude/thirtieth-maximum-rn2em7`, y lo primero que hace la rutina, antes
-de buscar nada, es leer el fichero más reciente. De ahí siguen funcionando la
-regla NO REPITAS LO DE AYER y los seguimientos de una línea.
-
-Ese fichero es lo único que verá la conversación de mañana, así que tiene que
-quedar completo. Si el repositorio no estuviera disponible o `repasos/`
-estuviera vacío, la rutina da el repaso igual y lo dice en una línea al final.
+Se probó lo contrario —una conversación nueva por día— entre el 9 y el 10 de
+septiembre de 2026, y hubo que revertirlo. Lo que lo mató está en el apartado
+siguiente. Lo que se gana con el hilo único es la continuidad: el repaso ve el
+del día anterior, así que puede evitar repeticiones, dar seguimientos de una
+línea y corregirse a sí mismo de un día para otro.
 
 ### Lo que no se puede hacer desde una sesión de rutina
 
-Comprobado el 10 de septiembre de 2026, cuando el primer intento de
-conversación-por-día salió mal y hubo que rehacerlo:
+Comprobado el 10 de septiembre de 2026, con dos ejecuciones reales y una prueba
+técnica aparte. Las conversaciones que **abre una rutina** (las de
+`create_new_session_on_fire`) tienen dos limitaciones que no se ven venir:
 
-- **La sesión no puede renombrarse.** Las conversaciones que abre una rutina
-  arrancan sin las herramientas de `claude-code-remote`, así que `get_session`,
-  `set_session_title` y `archive_session` no existen ahí. El título lo pone el
-  sistema, y es siempre el nombre de la rutina con un rayo delante:
-  `⚡ Repaso de noticias — 7:30 Canarias`. Por eso los días se distinguen por su
-  fecha en la lista y por el encabezado de la primera línea, no por el título.
-- **El repositorio hay que declararlo en la rutina.** Una rutina creada sin
-  `source_url` abre sesiones **sin repositorio dentro**: no hay clon, no hay
-  `repasos/` que leer y no hay adónde empujar. Fue exactamente lo que pasó el
-  10 de septiembre: la rutina se ejecutó, se marcó como correcta, gastó dos
-  minutos y no dejó nada. La rutina actual declara
-  `https://github.com/gulgak/Sangam` en la rama de trabajo.
+- **Nacen sin repositorio.** No hay clon, ni aunque la rutina declare
+  `source_url`: se probó y la sesión respondió que no había repositorio. Sin
+  repositorio no hay `repasos/` que leer ni adónde empujar. Esto es lo que
+  rompió el diseño de conversación-por-día: la rutina del 10 de septiembre se
+  ejecutó, se marcó como correcta, escribió un repaso completo de 51.000
+  palabras… y no pudo guardar nada ni comparar con el día anterior.
+- **No pueden renombrarse.** Arrancan sin las herramientas de
+  `claude-code-remote`, así que `set_session_title` y `archive_session` no
+  existen ahí. El título lo pone el sistema con el nombre de la rutina, igual
+  todos los días, y no se puede cambiar desde dentro.
+
+Juntas dejan la conversación-por-día sin sus dos ventajas: ni se distinguen los
+días por el título ni hay memoria de ayer. De ahí la vuelta al hilo único.
+
+Una sesión persistente no tiene ninguno de los dos problemas: es una
+conversación normal, con su repositorio y sus herramientas.
+
+### La copia de seguridad: la carpeta `repasos/`
+
+Además de escribirlo en el hilo, cada repaso se guarda en
+`repasos/AAAA-MM-DD.md` en la rama `claude/thirtieth-maximum-rn2em7`. No es la
+vía principal —la memoria está en la propia conversación— sino el respaldo para
+cuando el hilo se resuma o se pierda: entonces la rutina lee el fichero más
+reciente y sigue funcionando la regla de no repetir.
+
+Falta el fichero del 10 de septiembre de 2026: ese repaso se generó en una
+conversación aparte, sin repositorio, y no se pudo guardar.
 
 Las rutinas corren con el modelo por defecto de la cuenta, que es lo que entra
 en el plan Pro. Se probó Opus 5 y se revirtió por coste.
@@ -89,39 +93,47 @@ desplome económico) y la instrucción de callarse siempre que dudara, y fuera d
 
 ## Los pasos que envuelven al repaso
 
-> **PASO 1 — SITÚATE.**
+> **PASO 0 — COMPROBACIÓN DE HORA** (obligatorio, antes de nada).
+>
+> Ejecuta en bash: `TZ=Atlantic/Canary date '+%H:%M %Z'`
+>
+> Si la hora local de Canarias NO empieza por "07", no hagas nada más: responde
+> únicamente "Turno equivocado: son las HH:MM en Canarias. El repaso de hoy lo
+> genera la otra rutina." y termina ahí.
+>
+> **PASO 1 — MIRA LO DE AYER.**
+>
+> El repaso de ayer está más arriba en esta misma conversación. Si no aparece
+> porque la conversación se ha resumido, está en `repasos/` del repositorio:
 >
 > ```
-> TZ=Atlantic/Canary date '+%H:%M %Z · %A %d de %B de %Y'
-> cd "$(git rev-parse --show-toplevel 2>/dev/null || echo .)" && pwd
+> cd "$(git rev-parse --show-toplevel 2>/dev/null || echo /home/user/Sangam)"
 > git pull --ff-only 2>&1 | tail -2
 > ls repasos/ | tail -3
 > ```
->
-> Apunta la hora local: hace falta en el PASO 5.
->
-> **PASO 2 — LEE EL REPASO DE AYER.**
->
-> El fichero más reciente de `repasos/` es el repaso de ayer. Si el repositorio
-> no está o la carpeta está vacía, no te pares: da el repaso igual, sin
-> comparar, y dilo en una línea al final.
 
-Y después de escribir el repaso en la respuesta:
+Y la separación con la que empieza cada día, sin ninguna frase delante:
 
-> **PASO 4 — GUARDA EL REPASO PARA MAÑANA.**
+```
+---
+
+# 📅 JUEVES 10 DE SEPTIEMBRE DE 2026
+
+---
+```
+
+cerrando el repaso, después de "Lo único que hay que saber hoy", con otra
+línea `---`.
+
+Al terminar:
+
+> **PASO 3 — GUARDA UNA COPIA.**
 >
 > Guarda el mismo texto en `repasos/AAAA-MM-DD.md`, con `git add repasos/`,
 > `git commit` y `git push -u origin claude/thirtieth-maximum-rn2em7`. Si el
 > push falla por red, reintenta cuatro veces esperando 2, 4, 8 y 16 segundos.
-> Si falla por permisos o por no haber repositorio, dilo en una línea al final
-> del repaso en vez de esconderlo. No toques ningún otro fichero y no abras
-> ninguna pull request.
->
-> **PASO 5 — AVISO DE CAMBIO DE HORA.**
->
-> Si la hora local del PASO 1 no empezaba por "07", añade al final, en negrita:
-> "**Aviso: hoy el repaso ha salido a las HH:MM de Canarias, no a las 7:30. Hay
-> que cambiar el cron de la rutina.**" Si empezaba por "07", no digas nada.
+> Si falla por otra cosa, dilo en una línea al final en vez de esconderlo. No
+> toques ningún otro fichero y no abras ninguna pull request.
 
 ---
 
@@ -196,7 +208,7 @@ atrás pero hoy tiene una novedad relevante, entra, y explicas cuál es la noved
 Comprueba la fecha de cada pieza: lo de semanas atrás o no entra, o entra
 marcado explícitamente como contexto.
 
-**No repitas lo de ayer**: el repaso anterior lo has leído en el PASO 2. No des
+**No repitas lo de ayer**: el repaso anterior está más arriba en esta misma conversación (PASO 1). No des
 la misma noticia salvo que hoy tenga una novedad de verdad, y entonces di cuál
 es. Si una historia sigue viva pero sin avances, va en una sola línea de
 seguimiento al final del bloque, no como titular nuevo.
