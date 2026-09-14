@@ -5,22 +5,37 @@ pegarlo tal cual en una conversación nueva si quieres el repaso en otro momento
 
 ## Cómo está programado
 
-Dos rutinas gemelas, `30 6 * * *` y `30 7 * * *` (UTC), que escriben las dos en
-**la misma conversación**. El planificador solo entiende UTC y no sabe nada del
-cambio de hora, así que una sola rutina se desviaría una hora media año. Con
-dos, y una comprobación de la hora local al principio, el repaso sale a las
-**7:30 reales de Canarias** los 365 días sin tocar nada en marzo ni en octubre.
+**Una sola rutina**, `Repaso de noticias — 7:30 Canarias`, con cron `30 6 * * *`
+(06:30 UTC), que en horario de verano canario son las 7:30 de la mañana.
+Escribe en esta misma conversación, en modo sesión persistente.
 
-| Rutina  | Cron (UTC)   | Escribe el repaso en |
-| ------- | ------------ | -------------------- |
-| turno A | `30 6 * * *` | horario de verano (WEST, UTC+1) |
-| turno B | `30 7 * * *` | horario de invierno (WET, UTC+0) |
+### El cambio de hora, y por qué ya no se arregla solo
 
-La que no toca contesta una sola línea ("Turno equivocado…") y se calla. Cuesta
-una línea al día en el hilo y a cambio no hay que acordarse de nada.
+Hubo hasta el 14 de septiembre de 2026 **dos rutinas gemelas**, a las 06:30 y a
+las 07:30 UTC, cada una con una comprobación de la hora local al principio: la
+que no tocaba contestaba "Turno equivocado…" y se callaba. Así se acertaban las
+7:30 reales todo el año sin tocar nada en marzo ni en octubre.
 
-**Si cambias el prompt, cámbialo en las dos rutinas**: este fichero es la
-versión de referencia. Las dos llevan exactamente el mismo texto.
+Se eliminó la segunda porque el precio era una línea de "turno equivocado"
+**todos los días** en el hilo. A cambio, el cron hay que ajustarlo a mano dos
+veces al año:
+
+| Cuándo | Cron |
+| ------ | ---- |
+| horario de verano (WEST, UTC+1) | `30 6 * * *` |
+| horario de invierno (WET, UTC+0) | `30 7 * * *` |
+
+Con dos redes de seguridad para que no se olvide:
+
+1. **El propio repaso avisa.** El PASO 4 del prompt comprueba la hora local y,
+   si no son las 7 y pico, añade al final un aviso en negrita diciendo que hay
+   que cambiar el cron. Funciona aunque no quede nadie pendiente.
+2. **Un recordatorio programado.** Hay una Routine de un solo disparo para el
+   24 de octubre de 2026 (`trig_01QnVPqRu8GXZ5hf9P9Hnk44`) que entra en esta
+   conversación y pide hacer el cambio, y encadenar otro para marzo de 2027.
+
+El fallo, si las dos fallan, es suave: el repaso sale una hora antes, no deja
+de salir.
 
 ## Un solo hilo, con los días bien separados
 
@@ -93,24 +108,18 @@ desplome económico) y la instrucción de callarse siempre que dudara, y fuera d
 
 ## Los pasos que envuelven al repaso
 
-> **PASO 0 — COMPROBACIÓN DE HORA** (obligatorio, antes de nada).
->
-> Ejecuta en bash: `TZ=Atlantic/Canary date '+%H:%M %Z'`
->
-> Si la hora local de Canarias NO empieza por "07", no hagas nada más: responde
-> únicamente "Turno equivocado: son las HH:MM en Canarias. El repaso de hoy lo
-> genera la otra rutina." y termina ahí.
->
-> **PASO 1 — MIRA LO DE AYER.**
->
-> El repaso de ayer está más arriba en esta misma conversación. Si no aparece
-> porque la conversación se ha resumido, está en `repasos/` del repositorio:
+> **PASO 1 — SITÚATE Y MIRA LO DE AYER.**
 >
 > ```
+> TZ=Atlantic/Canary date '+%H:%M %Z · %A %d de %B de %Y'
 > cd "$(git rev-parse --show-toplevel 2>/dev/null || echo /home/user/Sangam)"
 > git pull --ff-only 2>&1 | tail -2
 > ls repasos/ | tail -3
 > ```
+>
+> Apunta la hora local: hace falta en el PASO 4. El repaso de ayer está más
+> arriba en esta misma conversación; si no aparece porque se ha resumido, está
+> en `repasos/`.
 
 Y la separación con la que empieza cada día, sin ninguna frase delante:
 
@@ -134,6 +143,12 @@ Al terminar:
 > push falla por red, reintenta cuatro veces esperando 2, 4, 8 y 16 segundos.
 > Si falla por otra cosa, dilo en una línea al final en vez de esconderlo. No
 > toques ningún otro fichero y no abras ninguna pull request.
+>
+> **PASO 4 — AVISO DE CAMBIO DE HORA.**
+>
+> Si la hora local del PASO 1 no empieza por "07", añade al final, en negrita:
+> "**Aviso: hoy el repaso ha salido a las HH:MM de Canarias, no a las 7:30. Hay
+> que cambiar el cron de la rutina a `30 7 * * *`.**" Si empieza por "07", nada.
 
 ---
 
