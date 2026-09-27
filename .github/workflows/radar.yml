@@ -7,10 +7,6 @@ on:
     - cron: "30 5 * * 1-5"
     - cron: "30 6 * * 1-5"
   workflow_dispatch:
-  push:
-    # TEMPORAL: prueba real en la rama de desarrollo. Se elimina antes de fusionar.
-    branches: [claude/daily-stock-potential-analysis-vmsyzy]
-    paths: ["radar/**", ".github/workflows/radar.yml"]
 
 permissions:
   contents: write
