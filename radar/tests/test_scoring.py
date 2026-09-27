@@ -129,3 +129,44 @@ def test_financials_skip_debt_ratio():
     f = fund({**BASE_INFO, "sector": "Financial Services", "debtToEquity": 900.0})
     _, _, _, neg = sc.fundamental_score(f)
     assert not any("Deuda" in n for n in neg)
+
+
+# --- Doble control del PER y tope de crecimiento -------------------------------------
+
+def test_pe_matching_statements_is_not_suspect():
+    f = fund({**BASE_INFO, "currentPrice": 100.0, "trailingPE": 20.0, "ttmEpsStatements": 5.1,
+              "currency": "USD", "financialCurrency": "USD"})
+    assert f["pe_check"] == pytest.approx(100 / 5.1) and not f["pe_suspect"]
+
+
+def test_pe_mismatch_is_suspect_and_skips_per_components():
+    # Caso Repsol: Yahoo 9,98 frente a ~13,9 por estados financieros
+    info = {**BASE_INFO, "currentPrice": 30.75, "trailingPE": 9.98, "forwardPE": 8.18,
+            "ttmEpsStatements": 2.22, "currency": "EUR", "financialCurrency": "EUR"}
+    f = fund(info, med=18.0)
+    assert f["pe_suspect"]
+    fs, cov, pos, neg = sc.fundamental_score(f)
+    assert any("PER dudoso" in x for x in neg)
+    assert not any(x.startswith(("PER ", "PEG")) for x in pos)
+    ok = fund({**info, "trailingPE": 13.85}, med=18.0)
+    assert sc.fundamental_score(ok)[1] > cov  # sin sospecha, los componentes del PER cuentan
+    assert sc.sector_medians([f]) == {}
+
+
+def test_pence_listing_and_foreign_reporting_currency():
+    gbp = fund({**BASE_INFO, "currentPrice": 1500.0, "trailingPE": 15.0, "ttmEpsStatements": 1.0,
+                "currency": "GBp", "financialCurrency": "GBP"})
+    assert gbp["pe_check"] == pytest.approx(15.0) and not gbp["pe_suspect"]
+    usd = fund({**BASE_INFO, "currentPrice": 50.0, "trailingPE": 15.0, "ttmEpsStatements": 1.0,
+                "currency": "EUR", "financialCurrency": "USD"})
+    assert usd["pe_check"] is None and not usd["pe_suspect"]
+
+
+def test_atypical_eps_growth_is_capped():
+    f = fund({**BASE_INFO, "earningsGrowth": 4.945}, ret_12m=1.16)
+    assert f["eps_atypical"] and f["eps_growth_raw"] == pytest.approx(4.945)
+    assert f["eps_growth"] == sc.EPS_GROWTH_CAP
+    assert f["pe_expansion"] == pytest.approx(2.16 / 2.5 - 1)
+    _, _, _, neg = sc.fundamental_score(f)
+    assert any("atípico" in x for x in neg)
+    assert "tope" in sc.summary(tech(ret_12m=1.16), f, sc.LABEL_SUSTAINABLE)

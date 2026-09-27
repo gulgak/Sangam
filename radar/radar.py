@@ -85,7 +85,7 @@ def analyse(source, universe: dict[str, str], cutoff: str) -> dict:
         lab = sc.label(m, f, tech, fund)
         ranking.append({
             "ticker": t,
-            "name": info.get("shortName") or info.get("longName") or t,
+            "name": " ".join(str(info.get("longName") or info.get("shortName") or t).split()),
             "market": universe[t],
             "market_name": MARKET_NAMES.get(universe[t], universe[t]),
             "sector": f["sector"],
@@ -98,15 +98,17 @@ def analyse(source, universe: dict[str, str], cutoff: str) -> dict:
             "fund_coverage": _r(cov, 2),
             "label": lab,
             "loss_making": f["loss_making"],
+            "pe_suspect": f["pe_suspect"],
+            "eps_atypical": f["eps_atypical"],
             "summary": sc.summary(m, f, lab),
             "signals_pos": tpos + fpos,
             "signals_neg": tneg + fneg,
             **{k: _r(m[k]) for k in ("ret_1m", "ret_3m", "ret_6m", "ret_12m", "rs_3m", "rs_6m",
                                      "dist_52w_high", "rvol")},
             **{k: _r(m[k], 1) for k in ("rsi", "adx")},
-            **{k: _r(f[k], 2) for k in ("pe_trailing", "pe_forward", "peg", "pe_sector_median",
+            **{k: _r(f[k], 2) for k in ("pe_trailing", "pe_check", "pe_forward", "peg", "pe_sector_median",
                                         "debt_to_equity")},
-            **{k: _r(f[k]) for k in ("eps_growth", "pe_expansion", "backing", "roe",
+            **{k: _r(f[k]) for k in ("eps_growth", "eps_growth_raw", "pe_expansion", "backing", "roe",
                                      "revenue_growth", "target_upside")},
         })
     ranking.sort(key=lambda x: (-x["score"], -x["tech_score"], x["ticker"]))

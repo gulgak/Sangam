@@ -64,6 +64,7 @@
   .kv { background: var(--panel2); border-radius: 10px; padding: 7px 8px; min-width: 0; }
   .kv span { display: block; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .kv b { font-size: 13.5px; }
+  .warn { color: var(--amber); cursor: help; }
   .pos { color: var(--green); } .neg { color: var(--terra); }
   .bars { display: grid; grid-template-columns: auto 1fr auto; gap: 4px 8px; align-items: center; margin-top: 10px; font-size: 11.5px; color: var(--muted); }
   .bar { height: 6px; background: var(--panel2); border-radius: 3px; overflow: hidden; }
@@ -105,6 +106,7 @@
     <p><b>Filtro:</b> solo acciones en tendencia alcista (precio &gt; media 50 &gt; media 200 y subida a 1 y 3 meses), con datos del último cierre.</p>
     <p><b>Técnico (50 %):</b> medias móviles, RSI (ideal 50–70), MACD, ADX, volumen relativo, cercanía al máximo de 52 semanas y fuerza frente a su índice.</p>
     <p><b>Fundamental (50 %):</b> PER forward frente al actual, PEG, PER frente a su sector, <b>respaldo de la subida</b> (qué parte de la subida de 12 meses se explica por el crecimiento del beneficio y no por la expansión del PER), ROE, deuda, ingresos y precio objetivo de analistas.</p>
+    <p><b>Controles de calidad:</b> el PER de Yahoo se contrasta con precio / BPA de los 4 últimos trimestres; si difieren más de un 15 % se marca ⚠ y no puntúa. Crecimientos del BPA superiores a +150 % se tratan como atípicos (efecto base) y se limitan a +150 %.</p>
     <p><b>Etiquetas:</b> «Subida sostenible» = tendencia fuerte con beneficio creciente detrás. «Momentum sin respaldo» = sube sobre todo el PER o hay pérdidas. «Sobrecomprada» = RSI &gt; 75 o &gt;25 % sobre su media de 50.</p>
     <p>Fuentes: Jegadeesh &amp; Titman (1993); George &amp; Hwang (2004); Wilder (1978); Lynch (1989). Datos: Yahoo Finance (gratuitos, pueden tener huecos).</p>
   </div>
@@ -156,7 +158,8 @@ function filtered() {
 }
 
 function card(x) {
-  var pe = x.loss_making ? 'Pérdidas' : n(x.pe_trailing);
+  var pe = x.loss_making ? 'Pérdidas' : n(x.pe_trailing) + (x.pe_suspect ? ' <span class="warn" title="No cuadra con los estados financieros (' + n(x.pe_check) + ')">⚠</span>' : '');
+  var epsTxt = p(x.eps_growth) + (x.eps_atypical ? ' <span class="warn" title="Dato original ' + p(x.eps_growth_raw) + ': probable efecto base">⚠</span>' : '');
   var peSec = (x.pe_trailing && x.pe_sector_median) ? n(x.pe_sector_median) : '—';
   var pos = (x.signals_pos || []).map(function (s) { return '<li class="pos">' + esc(s) + '</li>'; }).join('');
   var neg = (x.signals_neg || []).map(function (s) { return '<li class="neg">' + esc(s) + '</li>'; }).join('');
@@ -176,7 +179,7 @@ function card(x) {
       '<div class="kv"><span>RSI</span><b>' + n(x.rsi) + '</b></div>' +
       '<div class="kv"><span>3 meses</span><b class="' + sp(x.ret_3m) + '">' + p(x.ret_3m) + '</b></div>' +
       '<div class="kv"><span>12 meses</span><b class="' + sp(x.ret_12m) + '">' + p(x.ret_12m) + '</b></div>' +
-      '<div class="kv"><span>Crec. BPA</span><b class="' + sp(x.eps_growth) + '">' + p(x.eps_growth) + '</b></div>' +
+      '<div class="kv"><span>Crec. BPA</span><b class="' + sp(x.eps_growth) + '">' + epsTxt + '</b></div>' +
     '</div>' +
     '<div class="bars num"><span>Técnico</span><div class="bar"><i style="width:' + x.tech_score + '%;background:var(--blue)"></i></div><span>' + Math.round(x.tech_score) + '</span>' +
     '<span>Fundamental</span><div class="bar"><i style="width:' + fund + '%;background:var(--violet)"></i></div><span>' + (x.fund_score == null ? 's/d' : Math.round(x.fund_score)) + '</span></div>' +

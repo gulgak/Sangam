@@ -14,8 +14,21 @@ INFO_FIELDS = (
     "shortName", "longName", "sector", "industry", "currency", "trailingPE", "forwardPE",
     "trailingEps", "forwardEps", "earningsGrowth", "earningsQuarterlyGrowth", "trailingPegRatio",
     "returnOnEquity", "debtToEquity", "revenueGrowth", "targetMeanPrice", "currentPrice",
-    "regularMarketPrice", "numberOfAnalystOpinions", "marketCap",
+    "regularMarketPrice", "numberOfAnalystOpinions", "marketCap", "financialCurrency",
 )
+
+
+def ttm_eps_from_statements(qis: pd.DataFrame | None) -> float | None:
+    """Suma del BPA diluido (o básico) de los 4 últimos trimestres publicados."""
+    if qis is None or qis.empty:
+        return None
+    for row in ("Diluted EPS", "Basic EPS"):
+        if row in qis.index:
+            vals = pd.to_numeric(qis.loc[row], errors="coerce")
+            vals = vals[sorted(vals.index, reverse=True)].dropna() if len(vals) else vals
+            if len(vals) >= 4:
+                return float(vals.iloc[:4].sum())
+    return None
 
 
 class YahooSource:
@@ -59,8 +72,15 @@ class YahooSource:
     def info(self, ticker: str) -> dict:
         for attempt in range(3):
             try:
-                raw = self.yf.Ticker(ticker).info or {}
-                return {k: raw.get(k) for k in INFO_FIELDS}
+                tk = self.yf.Ticker(ticker)
+                raw = tk.info or {}
+                out = {k: raw.get(k) for k in INFO_FIELDS}
+                try:
+                    out["ttmEpsStatements"] = ttm_eps_from_statements(tk.quarterly_income_stmt)
+                except Exception as e:
+                    log.info("estados %s no disponibles: %s", ticker, e)
+                    out["ttmEpsStatements"] = None
+                return out
             except Exception as e:
                 log.warning("info %s intento %d: %s", ticker, attempt + 1, e)
                 time.sleep(3 * (attempt + 1))

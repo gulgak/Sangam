@@ -58,3 +58,14 @@ def test_pct_change_over():
     s = pd.Series([100.0, 110, 121])
     assert ind.pct_change_over(s, 2) == pytest.approx(0.21)
     assert ind.pct_change_over(s, 5) is None
+
+
+def test_ttm_eps_from_statements():
+    from radar.sources import ttm_eps_from_statements
+
+    cols = pd.to_datetime(["2026-06-30", "2026-03-31", "2025-12-31", "2025-09-30", "2025-06-30"])
+    qis = pd.DataFrame([[0.6, 0.5, 0.55, 0.57, 9.0]], index=["Diluted EPS"], columns=cols)
+    assert ttm_eps_from_statements(qis) == pytest.approx(2.22)
+    qis2 = pd.DataFrame([[0.6, np.nan, 0.5, 0.5]], index=["Diluted EPS"], columns=cols[:4])
+    assert ttm_eps_from_statements(qis2) is None
+    assert ttm_eps_from_statements(None) is None

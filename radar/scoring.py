@@ -21,6 +21,8 @@ TECH_WEIGHT = 0.5
 FUND_WEIGHT = 0.5
 MIN_HISTORY = 220          # sesiones mínimas para SMA200 + pendiente
 MIN_FUND_COVERAGE = 0.4    # peso mínimo de datos fundamentales disponibles
+EPS_GROWTH_CAP = 1.5       # por encima, crecimiento atípico (efecto base): se usa el tope
+PE_CHECK_TOL = 0.15        # diferencia máxima entre el PER de Yahoo y el de estados financieros
 
 LABEL_SUSTAINABLE = "Subida sostenible"
 LABEL_UNBACKED = "Momentum sin respaldo"
@@ -188,14 +190,30 @@ def fundamental_metrics(info: dict, ret_12m: float | None) -> dict:
     losing = (teps is not None and teps < 0) or (tpe is not None and tpe < 0)
     if losing:
         tpe = None
-    eps_g = _f(info.get("earningsGrowth"))
-    if eps_g is None:
-        eps_g = _f(info.get("earningsQuarterlyGrowth"))
+    price = _f(info.get("currentPrice")) or _f(info.get("regularMarketPrice"))
+    target = _f(info.get("targetMeanPrice"))
+
+    # Doble control del PER: precio / BPA de los 4 últimos trimestres de los estados
+    # financieros (fuente independiente del PER resumido de Yahoo).
+    pe_check, pe_suspect = None, False
+    eps_stmt = _f(info.get("ttmEpsStatements"))
+    cur, fin = info.get("currency"), info.get("financialCurrency")
+    if price and eps_stmt and eps_stmt > 0 and cur and fin:
+        if cur == fin:
+            pe_check = price / eps_stmt
+        elif cur == "GBp" and fin == "GBP":  # Londres cotiza en peniques
+            pe_check = price / 100 / eps_stmt
+        if tpe and pe_check and abs(tpe / pe_check - 1) > PE_CHECK_TOL:
+            pe_suspect = True
+
+    eps_g_raw = _f(info.get("earningsGrowth"))
+    if eps_g_raw is None:
+        eps_g_raw = _f(info.get("earningsQuarterlyGrowth"))
+    eps_atypical = eps_g_raw is not None and eps_g_raw > EPS_GROWTH_CAP
+    eps_g = min(eps_g_raw, EPS_GROWTH_CAP) if eps_g_raw is not None else None
     peg = _f(info.get("trailingPegRatio"))
     if peg is None and tpe and tpe > 0 and eps_g and eps_g > 0:
         peg = tpe / (eps_g * 100)
-    price = _f(info.get("currentPrice")) or _f(info.get("regularMarketPrice"))
-    target = _f(info.get("targetMeanPrice"))
 
     backing = pe_expansion = None
     if ret_12m is not None and eps_g is not None and eps_g > -1:
@@ -207,8 +225,12 @@ def fundamental_metrics(info: dict, ret_12m: float | None) -> dict:
         "loss_making": losing,
         "pe_trailing": tpe,
         "pe_forward": fpe,
+        "pe_check": pe_check,
+        "pe_suspect": pe_suspect,
         "peg": peg,
         "eps_growth": eps_g,
+        "eps_growth_raw": eps_g_raw,
+        "eps_atypical": eps_atypical,
         "pe_expansion": pe_expansion,
         "backing": backing,
         "roe": _f(info.get("returnOnEquity")),
@@ -223,7 +245,8 @@ def fundamental_metrics(info: dict, ret_12m: float | None) -> dict:
 
 def sector_medians(rows: list[dict], min_group: int = 5) -> dict[str, float]:
     """Mediana del PER trailing positivo por sector; '*' = mediana global."""
-    pes = [(r["sector"], r["pe_trailing"]) for r in rows if r.get("pe_trailing") and r["pe_trailing"] > 0]
+    pes = [(r["sector"], r["pe_trailing"]) for r in rows
+           if r.get("pe_trailing") and r["pe_trailing"] > 0 and not r.get("pe_suspect")]
     out = {}
     if pes:
         out["*"] = float(np.median([p for _, p in pes]))
@@ -243,9 +266,12 @@ def fundamental_score(f: dict) -> tuple[float | None, float, list[str], list[str
     tpe, fpe = f["pe_trailing"], f["pe_forward"]
     losing = f.get("loss_making", False)
 
+    suspect = f.get("pe_suspect", False)
     if losing:
         avail += 15 + 15
         neg.append("Empresa en pérdidas (PER negativo)")
+    elif suspect:
+        neg.append(f"⚠ PER dudoso: Yahoo {_n(tpe)} frente a {_n(f['pe_check'])} según estados financieros; no puntúa")
     else:
         # PER forward < PER actual (15)
         if tpe and fpe:
@@ -278,6 +304,8 @@ def fundamental_score(f: dict) -> tuple[float | None, float, list[str], list[str
     peg = f["peg"]
     if losing:
         avail += 20
+    elif suspect:
+        pass
     elif peg is not None and peg > 0:
         avail += 20
         if peg < 1:
@@ -293,6 +321,8 @@ def fundamental_score(f: dict) -> tuple[float | None, float, list[str], list[str
             neg.append(f"PEG {_n(peg, 2)}: caro para su crecimiento")
     # Respaldo de la subida por beneficios (25)
     b, eg = f["backing"], f["eps_growth"]
+    if f.get("eps_atypical"):
+        neg.append(f"Crecimiento del BPA atípico ({f['eps_growth_raw']:+.0%}), probable efecto base: se usa {EPS_GROWTH_CAP:+.0%}")
     if b is not None:
         avail += 25
         if b >= 0.999:
@@ -387,14 +417,15 @@ def summary(m: dict, f: dict, lab: str) -> str:
     parts.append("Tendencia alcista" + (f" ({', '.join(tech_bits)})" if tech_bits else ""))
     eg, b = f.get("eps_growth"), f.get("backing")
     if r12 is not None and eg is not None:
+        eg_txt = f"{eg:+.0%}" + (" (tope; dato atípico)" if f.get("eps_atypical") else "")
         if b is not None and b >= 0.5:
-            parts.append(f"la subida de {r12:+.0%} en 12 meses la respalda un BPA {eg:+.0%}")
+            parts.append(f"la subida de {r12:+.0%} en 12 meses la respalda un BPA {eg_txt}")
         elif r12 > 0:
-            parts.append(f"sube {r12:+.0%} en 12 meses pero el BPA va {eg:+.0%}: pesa la expansión del PER")
+            parts.append(f"sube {r12:+.0%} en 12 meses pero el BPA va {eg_txt}: pesa la expansión del PER")
     tpe, fpe = f.get("pe_trailing"), f.get("pe_forward")
     if tpe and tpe > 0 and fpe:
         comp = "<" if fpe < tpe else "≥"
-        parts.append(f"PER {_n(tpe)} → forward {_n(fpe)} ({comp})")
+        parts.append(f"PER {_n(tpe)} → forward {_n(fpe)} ({comp})" + (" ⚠ PER dudoso" if f.get("pe_suspect") else ""))
     elif f.get("loss_making"):
         parts.append("sin beneficios (PER negativo)")
     txt = "; ".join(parts) + "."
