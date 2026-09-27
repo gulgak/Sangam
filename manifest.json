@@ -1,7 +1,7 @@
 {
-  "name": "Sangam — Entrenador · Annapurna · Gastos · Asesor",
+  "name": "Sangam — Entrenador · Annapurna · Gastos · Asesor · Bolsa",
   "short_name": "Sangam",
-  "description": "Cuatro apps personales en una: entrenador adaptado, dieta vegetariana, control de gastos y asesor de estilo.",
+  "description": "Cinco apps personales en una: entrenador adaptado, dieta vegetariana, control de gastos, asesor de estilo y radar de bolsa.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
