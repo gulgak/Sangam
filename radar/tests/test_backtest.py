@@ -228,3 +228,11 @@ def test_full_mode_uses_point_in_time_fundamentals():
     assert any(r["fund"] is not None for r in ranks[k_after])     # ya presentado
     res = rp.analyze(prep, ranks, elig, "^IDX", full=True)
     assert {c["id"] for c in res["criteria"]} >= {"beats_ew", "significant", "ic", "labels", "drawdown"}
+
+
+def test_find_changes_table_flat_or_multiindex():
+    flat = pd.DataFrame(columns=["Date", "Added Ticker", "Added Security", "Removed Ticker", "Removed Security", "Reason"])
+    cur = pd.DataFrame(columns=["Symbol", "Security", "GICS Sector"])
+    c, ch = ms._find([cur, flat])
+    assert c is cur and ch is flat
+    assert ms._find([cur])[1] is None

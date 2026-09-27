@@ -85,7 +85,11 @@ def main(argv=None) -> int:
     # Universo
     cur_df, ch_df = ms.fetch_tables()
     current, sectors = ms.current_members_and_sectors(cur_df)
-    changes = ms.parse_changes(ch_df)
+    if ch_df is not None:
+        changes = ms.parse_changes(ch_df)
+    else:
+        log.warning("Sin historial de cambios: se usa solo la composición actual (más sesgo)")
+        changes = pd.DataFrame({"date": pd.Series([], dtype="datetime64[ns]"), "added": [], "removed": []})
     members = ms.members_at(sig, current, changes)
     us_all = sorted(set().union(*members.values()))
     rows = list(csv.DictReader(open(HERE / "universe.csv", encoding="utf-8")))
@@ -162,7 +166,8 @@ def main(argv=None) -> int:
         "config": {"rebalance": "semanal", "top_n": rp.TOP_N, "cost_per_side": rp.COST,
                    "signal": "cierre del viernes", "execution": "cierre del siguiente día hábil",
                    "risk_free": 0.0, "prices_from": START_PRICES},
-        "data": {"sp500_hist_tickers": len(us_all), "sp500_missing_prices": len(missing_us),
+        "data": {"membership_history": ch_df is not None, "membership_changes": int(len(changes)),
+                 "sp500_hist_tickers": len(us_all), "sp500_missing_prices": len(missing_us),
                  "missing_examples": missing_us[:40], "world_tickers": len(world),
                  "world_with_prices": sum(t in prices for t in world),
                  "sec_with_fundamentals": len(fundamentals), "sec_ticker_map": len(cik),

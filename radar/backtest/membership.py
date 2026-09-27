@@ -3,8 +3,11 @@ historial de cambios de Wikipedia. Reduce (no elimina) el sesgo de supervivencia
 from __future__ import annotations
 
 import io
+import logging
 
 import pandas as pd
+
+log = logging.getLogger("radar")
 
 URL = "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies"
 
@@ -18,14 +21,37 @@ def _norm(t) -> str | None:
     return t or None
 
 
+def _flat(t: pd.DataFrame) -> str:
+    return " ".join(" ".join(map(str, c)) if isinstance(c, tuple) else str(c) for c in t.columns).lower()
+
+
+def _find(tables):
+    current = next((t for t in tables if "Symbol" in t.columns and "GICS Sector" in t.columns), None)
+    changes = next((t for t in tables if "added" in _flat(t) and "removed" in _flat(t)), None)
+    return current, changes
+
+
 def fetch_tables(user_agent: str = "Mozilla/5.0 (Sangam radar)"):
+    """(tabla actual, tabla de cambios o None). Registra las tablas si no encuentra la de cambios."""
     import requests
 
-    html = requests.get(URL, headers={"User-Agent": user_agent}, timeout=30).text
+    h = {"User-Agent": user_agent}
+    html = requests.get(URL, headers=h, timeout=30).text
     tables = pd.read_html(io.StringIO(html))
-    current = next(t for t in tables if "Symbol" in t.columns and "GICS Sector" in t.columns)
-    changes = next(t for t in tables if isinstance(t.columns, pd.MultiIndex) or
-                   any("Added" in str(c) for c in t.columns))
+    current, changes = _find(tables)
+    if changes is None:
+        log.warning("Tabla de cambios no encontrada en la página; tablas: %s",
+                    [(t.shape, _flat(t)[:120]) for t in tables])
+        api = ("https://en.wikipedia.org/w/api.php?action=parse&page=List_of_S%26P_500_companies"
+               "&prop=text&format=json&formatversion=2")
+        try:
+            html2 = requests.get(api, headers=h, timeout=30).json()["parse"]["text"]
+            c2, changes = _find(pd.read_html(io.StringIO(html2)))
+            current = current if current is not None else c2
+        except Exception as e:
+            log.warning("API de Wikipedia: %s", e)
+    if current is None:
+        raise RuntimeError("No encuentro la tabla de componentes actuales del S&P 500")
     return current, changes
 
 
