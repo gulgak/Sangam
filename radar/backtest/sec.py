@@ -209,9 +209,26 @@ class SecClient:
                 time.sleep(2 * (attempt + 1))
         return None
 
+    def _get_text(self, url: str) -> str | None:
+        try:
+            r = self.s.get(url, timeout=60)
+            time.sleep(self.pause)
+            log.info("SEC %s -> %s", url, r.status_code)
+            return r.text if r.ok else None
+        except Exception as e:
+            log.warning("SEC %s: %s", url, e)
+            return None
+
     def ticker_map(self) -> dict[str, int]:
         data = self._get("https://www.sec.gov/files/company_tickers.json") or {}
-        return {v["ticker"].upper().replace(".", "-"): int(v["cik_str"]) for v in data.values()}
+        out = {v["ticker"].upper().replace(".", "-"): int(v["cik_str"]) for v in data.values()}
+        if not out:
+            txt = self._get_text("https://www.sec.gov/include/ticker.txt") or ""
+            for line in txt.splitlines():
+                parts = line.split()
+                if len(parts) == 2 and parts[1].isdigit():
+                    out[parts[0].upper().replace(".", "-")] = int(parts[1])
+        return out
 
     def companyfacts(self, cik: int) -> dict | None:
         return self._get(f"https://data.sec.gov/api/xbrl/companyfacts/CIK{cik:010d}.json")

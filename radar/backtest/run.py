@@ -85,12 +85,17 @@ def main(argv=None) -> int:
     # Universo
     cur_df, ch_df = ms.fetch_tables()
     current, sectors = ms.current_members_and_sectors(cur_df)
-    if ch_df is not None:
-        changes = ms.parse_changes(ch_df)
+    comp = ms.fetch_historical_components()
+    if comp is not None and len(comp):
+        members = ms.members_from_components(sig, comp)
+        membership_source = "fja05680/sp500 (composición diaria histórica)"
+    elif ch_df is not None:
+        members = ms.members_at(sig, current, ms.parse_changes(ch_df))
+        membership_source = "Wikipedia (historial de cambios)"
     else:
-        log.warning("Sin historial de cambios: se usa solo la composición actual (más sesgo)")
-        changes = pd.DataFrame({"date": pd.Series([], dtype="datetime64[ns]"), "added": [], "removed": []})
-    members = ms.members_at(sig, current, changes)
+        log.warning("Sin historial de composición: se usa solo la actual (más sesgo)")
+        members = {d: frozenset(current) for d in sig}
+        membership_source = "solo composición actual"
     us_all = sorted(set().union(*members.values()))
     rows = list(csv.DictReader(open(HERE / "universe.csv", encoding="utf-8")))
     world = {r["ticker"]: r["market"] for r in rows if r["market"] not in ("US", "US_FALLBACK")}
@@ -106,6 +111,11 @@ def main(argv=None) -> int:
     # Fundamentales SEC
     client = sec.SecClient(a.user_agent)
     cik = client.ticker_map()
+    wiki_cik = ms.ciks_from_current(cur_df)
+    log.info("CIK: %d de la SEC, %d de Wikipedia", len(cik), len(wiki_cik))
+    cik = {**wiki_cik, **cik}
+    probe = client.companyfacts(320193)  # Apple, para registrar si data.sec.gov responde
+    log.info("Prueba data.sec.gov (AAPL): %s", "ok" if probe else "sin respuesta")
     fundamentals, eps_checks = {}, []
     check_facts = {}
     for n, t in enumerate(us_all, 1):
@@ -166,7 +176,8 @@ def main(argv=None) -> int:
         "config": {"rebalance": "semanal", "top_n": rp.TOP_N, "cost_per_side": rp.COST,
                    "signal": "cierre del viernes", "execution": "cierre del siguiente día hábil",
                    "risk_free": 0.0, "prices_from": START_PRICES},
-        "data": {"membership_history": ch_df is not None, "membership_changes": int(len(changes)),
+        "data": {"membership_source": membership_source,
+                 "membership_history": membership_source != "solo composición actual",
                  "sp500_hist_tickers": len(us_all), "sp500_missing_prices": len(missing_us),
                  "missing_examples": missing_us[:40], "world_tickers": len(world),
                  "world_with_prices": sum(t in prices for t in world),

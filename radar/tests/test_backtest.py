@@ -236,3 +236,18 @@ def test_find_changes_table_flat_or_multiindex():
     c, ch = ms._find([cur, flat])
     assert c is cur and ch is flat
     assert ms._find([cur])[1] is None
+
+
+def test_historical_components_dataset():
+    raw = pd.DataFrame({"date": ["2016-01-04", "2020-06-22", "2024-01-02"],
+                        "tickers": ["AAPL,OLD,BRK.B", "AAPL,BRK.B,NEW", "AAPL,BRK.B,NEW,NVDA"]})
+    comp = ms.parse_components(raw)
+    m = ms.members_from_components(pd.to_datetime(["2015-06-05", "2019-01-04", "2021-01-01"]), comp)
+    assert m[pd.Timestamp("2015-06-05")] == frozenset()
+    assert m[pd.Timestamp("2019-01-04")] == {"AAPL", "OLD", "BRK-B"}
+    assert m[pd.Timestamp("2021-01-01")] == {"AAPL", "BRK-B", "NEW"}
+
+
+def test_ciks_from_wikipedia_table():
+    cur = pd.DataFrame({"Symbol": ["AAPL", "BRK.B"], "GICS Sector": ["IT", "Financials"], "CIK": [320193, "1067983"]})
+    assert ms.ciks_from_current(cur) == {"AAPL": 320193, "BRK-B": 1067983}

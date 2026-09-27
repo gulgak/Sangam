@@ -100,3 +100,61 @@ def current_members_and_sectors(current: pd.DataFrame) -> tuple[set[str], dict[s
     syms = current["Symbol"].map(_norm)
     sectors = {s: GICS_TO_YAHOO.get(g, g) for s, g in zip(syms, current["GICS Sector"])}
     return set(syms.dropna()), sectors
+
+
+HIST_REPO = "https://api.github.com/repos/fja05680/sp500/contents"
+
+
+def fetch_historical_components(user_agent: str = "Mozilla/5.0 (Sangam radar)") -> pd.DataFrame | None:
+    """Composición diaria histórica del S&P 500 (dataset público fja05680/sp500).
+    Devuelve columnas date / tickers (lista) o None si no está disponible."""
+    import requests
+
+    h = {"User-Agent": user_agent}
+    try:
+        files = requests.get(HIST_REPO, headers=h, timeout=30).json()
+        cands = sorted(f["name"] for f in files if f["name"].startswith("S&P 500 Historical Components")
+                       and f["name"].endswith(".csv"))
+        if not cands:
+            log.warning("Dataset histórico: no hay CSV de componentes")
+            return None
+        url = next(f["download_url"] for f in files if f["name"] == cands[-1])
+        raw = pd.read_csv(io.StringIO(requests.get(url, headers=h, timeout=60).text))
+        log.info("Dataset histórico: %s (%d filas)", cands[-1], len(raw))
+        return parse_components(raw)
+    except Exception as e:
+        log.warning("Dataset histórico no disponible: %s", e)
+        return None
+
+
+def parse_components(raw: pd.DataFrame) -> pd.DataFrame:
+    date_col = next(c for c in raw.columns if "date" in c.lower())
+    tick_col = next(c for c in raw.columns if "ticker" in c.lower())
+    out = pd.DataFrame({
+        "date": pd.to_datetime(raw[date_col], errors="coerce"),
+        "tickers": raw[tick_col].map(lambda s: frozenset(t for t in (_norm(x) for x in str(s).split(",")) if t)),
+    }).dropna(subset=["date"]).sort_values("date")
+    return out.reset_index(drop=True)
+
+
+def members_from_components(dates, comp: pd.DataFrame) -> dict[pd.Timestamp, frozenset]:
+    """Composición vigente en cada fecha (última fila con fecha <= d)."""
+    idx = pd.DatetimeIndex(comp["date"])
+    out = {}
+    for d in pd.to_datetime(list(dates)):
+        i = idx.searchsorted(d, side="right") - 1
+        out[d] = comp["tickers"].iloc[i] if i >= 0 else frozenset()
+    return out
+
+
+def ciks_from_current(current: pd.DataFrame) -> dict[str, int]:
+    col = next((c for c in current.columns if str(c).strip().upper() == "CIK"), None)
+    if col is None:
+        return {}
+    out = {}
+    for sym, cik in zip(current["Symbol"].map(_norm), current[col]):
+        try:
+            out[sym] = int(cik)
+        except (TypeError, ValueError):
+            pass
+    return out
