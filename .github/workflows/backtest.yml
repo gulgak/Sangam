@@ -2,10 +2,6 @@ name: Backtest del Radar
 
 on:
   workflow_dispatch:
-  push:
-    # TEMPORAL: ejecución de validación en la rama del backtest. Se elimina antes de fusionar.
-    branches: [claude/radar-backtest]
-    paths: ["radar/backtest/**", ".github/workflows/backtest.yml"]
 
 permissions:
   contents: write

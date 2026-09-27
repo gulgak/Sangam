@@ -84,7 +84,7 @@
   .bt { --s1: #3987e5; --s2: #d95926; --s3: #199e70; }
   @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) .bt { --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; } }
   .bt .verdict { font-size: 15px; font-weight: 800; margin: 4px 0 8px; }
-  .bt .verdict.bad { color: var(--terra); } .bt .verdict.good { color: var(--green); }
+  .bt .verdict.bad { color: var(--terra); } .bt .verdict.mid { color: var(--amber); } .bt .verdict.good { color: var(--green); }
   .bt table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin: 8px 0; }
   .bt th, .bt td { text-align: left; padding: 6px 4px; border-bottom: 1px solid var(--line); vertical-align: top; }
   .bt th { font-size: 10.5px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); font-weight: 700; }
@@ -357,9 +357,10 @@ function btRender() {
   var noFund = !(d.data && d.data.sec_with_fundamentals > 0);
   if (noFund) LAYER_NAMES.us_full = 'EE. UU. (solo técnico: sin datos SEC)';
   var passAll = L.criteria.every(function (c) { return c.pass; });
+  var onlySig = !passAll && L.criteria.every(function (c) { return c.pass || c.id === 'significant'; });
   var v = document.getElementById('bt-verdict');
-  v.textContent = passAll ? '✓ Fiable según los criterios fijados' : '✗ No fiable en su forma actual';
-  v.className = 'verdict ' + (passAll ? 'good' : 'bad');
+  v.textContent = passAll ? '✓ Fiable según los criterios fijados' : onlySig ? '⚠ Prometedora, pero no demostrada (no significativa)' : '✗ No fiable en su forma actual';
+  v.className = 'verdict ' + (passAll ? 'good' : onlySig ? 'mid' : 'bad');
   document.getElementById('bt-sub').textContent = isMom
     ? 'Señal nueva «' + L.mom.chosen_text + '» (elegida con 2016–2021 entre 3 variantes fijadas de antemano). Cada mes: entran las 30 mejores y se mantienen mientras sigan en el top 60; coste 0,1 %. Veredicto y tabla: solo periodo de validación (desde ' + day(L.split) + ', nunca usado para diseñar).'
     : 'Señal antigua. Simulación ' + day(L.start) + ' – ' + day(L.end) + ': cada semana se compran las 30 acciones con mejor nota (coste 0,1 % por operación). 1 € invertido al inicio:';
@@ -387,7 +388,7 @@ function btRender() {
   document.getElementById('bt').hidden = false;
 }
 load('backtest.json').then(function (d) { BT.data = d; btRender(); }).catch(function () {});
-var btT; window.addEventListener('resize', function () { clearTimeout(btT); btT = setTimeout(function () { if (BT.data) btChart(BT.data.layers[BT.layer]); }, 150); });
+var btT; window.addEventListener('resize', function () { clearTimeout(btT); btT = setTimeout(function () { if (BT.data) btRender(); }, 150); });
 </script>
 </body>
 </html>
