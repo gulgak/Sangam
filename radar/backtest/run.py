@@ -91,6 +91,10 @@ def main(argv=None) -> int:
     if comp is not None and len(comp):
         members = ms.members_from_components(sig, comp)
         membership_source = "fja05680/sp500 (composición diaria histórica)"
+        last = comp["date"].max()
+        if (pd.Timestamp(end) - last).days > 120:
+            log.warning("El dataset histórico termina el %s: después se usa la composición actual", last.date())
+            members = {d: (frozenset(current) if d > last else m) for d, m in members.items()}
     elif ch_df is not None:
         members = ms.members_at(sig, current, ms.parse_changes(ch_df))
         membership_source = "Wikipedia (historial de cambios)"
@@ -205,6 +209,7 @@ def main(argv=None) -> int:
                    "signal": "cierre del viernes", "execution": "cierre del siguiente día hábil",
                    "risk_free": 0.0, "prices_from": START_PRICES},
         "data": {"membership_source": membership_source,
+                 "membership_last_date": comp["date"].max().strftime("%Y-%m-%d") if comp is not None and len(comp) else None,
                  "membership_history": membership_source != "solo composición actual",
                  "sp500_hist_tickers": len(us_all), "sp500_missing_prices": len(missing_us),
                  "missing_examples": missing_us[:40], "world_tickers": len(world),

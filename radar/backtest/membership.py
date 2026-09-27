@@ -120,18 +120,35 @@ def fetch_historical_components(user_agent: str = "Mozilla/5.0 (Sangam radar)") 
         if not isinstance(files, list):
             log.warning("Dataset histórico: respuesta inesperada de la API: %s", str(files)[:200])
             return None
-        cands = sorted(f["name"] for f in files if f["name"].startswith("S&P 500 Historical Components")
-                       and f["name"].endswith(".csv"))
-        if not cands:
+        name = latest_components_file([f["name"] for f in files])
+        if not name:
             log.warning("Dataset histórico: no hay CSV de componentes")
             return None
-        url = next(f["download_url"] for f in files if f["name"] == cands[-1])
+        url = next(f["download_url"] for f in files if f["name"] == name)
         raw = pd.read_csv(io.StringIO(requests.get(url, headers={"User-Agent": user_agent}, timeout=60).text))
-        log.info("Dataset histórico: %s (%d filas)", cands[-1], len(raw))
-        return parse_components(raw)
+        comp = parse_components(raw)
+        log.info("Dataset histórico: %s (%d filas, última fecha %s)", name, len(comp),
+                 comp["date"].max().date() if len(comp) else None)
+        return comp
     except Exception as e:
         log.warning("Dataset histórico no disponible: %s", e)
         return None
+
+
+def latest_components_file(names: list[str]) -> str | None:
+    """El CSV de componentes más reciente según la FECHA del nombre (MM-DD-YYYY), no el orden
+    alfabético (con ese formato, '12-10-2019' iría detrás de '01-17-2025')."""
+    import re
+
+    best = None
+    for nm in names:
+        if not (nm.startswith("S&P 500 Historical Components") and nm.endswith(".csv")):
+            continue
+        m = re.search(r"(\d{2})-(\d{2})-(\d{4})", nm)
+        d = pd.Timestamp(int(m.group(3)), int(m.group(1)), int(m.group(2))) if m else pd.Timestamp.min
+        if best is None or d > best[0]:
+            best = (d, nm)
+    return best[1] if best else None
 
 
 def parse_components(raw: pd.DataFrame) -> pd.DataFrame:

@@ -264,3 +264,11 @@ def test_sec_client_breaker_and_no_retry_on_403(monkeypatch):
     for _ in range(5):
         assert client.companyfacts(1) is None
     assert len(calls) == 3 and client.disabled   # un intento por petición y corte a las 3
+
+
+def test_latest_components_file_by_date_not_alphabet():
+    names = ["README.md", "S&P 500 Historical Components & Changes(12-10-2019).csv",
+             "S&P 500 Historical Components & Changes(01-17-2025).csv",
+             "S&P 500 Historical Components & Changes(08-04-2026).csv"]
+    assert ms.latest_components_file(names).endswith("(08-04-2026).csv")
+    assert ms.latest_components_file(["README.md"]) is None
