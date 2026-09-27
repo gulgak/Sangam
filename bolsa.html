@@ -333,6 +333,8 @@ function btChart(L) {
 }
 function btRender() {
   var d = BT.data, L = d.layers[BT.layer];
+  var noFund = !(d.data && d.data.sec_with_fundamentals > 0);
+  if (noFund) LAYER_NAMES.us_full = 'EE. UU. (solo técnico: sin datos SEC)';
   var passAll = L.criteria.every(function (c) { return c.pass; });
   var v = document.getElementById('bt-verdict');
   v.textContent = passAll ? '✓ Fiable según los criterios fijados' : '✗ No fiable en su forma actual';
@@ -348,7 +350,9 @@ function btRender() {
     rows.map(function (r) { return '<tr><td>' + esc(r[0]) + '</td><td class="n">' + p(r[1].cagr) + '</td><td class="n">' + n(r[1].sharpe) + '</td><td class="n">' + p(r[1].max_dd) + '</td></tr>'; }).join('');
   document.getElementById('bt-crit').innerHTML = '<tr><th>Criterio fijado de antemano</th><th class="n">Resultado</th></tr>' +
     L.criteria.map(function (c) { return '<tr><td>' + (c.pass ? '✓ ' : '✗ ') + esc(c.text) + '</td><td class="n">' + (c.value == null ? 's/d' : (Math.abs(c.value) < 1.5 && c.id !== 'significant' ? p(c.value) : n(c.value))) + '</td></tr>'; }).join('');
-  document.getElementById('bt-notes').textContent = 'Rotación: ' + n(L.turnover_per_year) + ' veces la cartera al año. Sesgos: universo con supervivientes, fundamentales solo de EE. UU. (SEC), sin PER forward ni precios objetivo históricos. Rentabilidades pasadas no garantizan resultados futuros.';
+  document.getElementById('bt-notes').textContent = 'Rotación: ' + n(L.turnover_per_year) + ' veces la cartera al año. ' +
+    (noFund ? 'La mitad fundamental NO se ha podido probar (la SEC bloqueó el acceso a sus datos). ' : '') +
+    'Composición histórica del S&P 500: ' + (d.data.membership_history ? 'sí' : 'no') + ' (' + (d.data.sp500_missing_prices || 0) + ' empresas sin precios, sesgo de supervivencia residual). Rentabilidades pasadas no garantizan resultados futuros.';
   document.getElementById('bt').hidden = false;
 }
 load('backtest.json').then(function (d) { BT.data = d; btRender(); }).catch(function () {});
