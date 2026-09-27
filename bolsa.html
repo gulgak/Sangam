@@ -84,6 +84,13 @@
   .bt { --s1: #3987e5; --s2: #d95926; --s3: #199e70; }
   @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) .bt { --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; } }
   .bt .verdict { font-size: 15px; font-weight: 800; margin: 4px 0 8px; }
+  .warnbox { background: color-mix(in srgb, var(--amber) 14%, var(--panel)); border: 1px solid color-mix(in srgb, var(--amber) 40%, transparent);
+    border-radius: 12px; padding: 10px 12px; font-size: 12.5px; margin: 0 0 12px; }
+  .exp { display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: .4px; color: var(--amber);
+    border: 1px solid var(--amber); border-radius: 6px; padding: 3px 7px; margin: 0 0 10px; }
+  .pp-list { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 10px; }
+  .pp-list span { font-size: 12px; background: var(--panel2); border-radius: 8px; padding: 3px 8px; font-variant-numeric: tabular-nums; }
+  .pp-list span.in { color: var(--green); } .pp-list span.out { color: var(--terra); text-decoration: line-through; }
   .bt .verdict.bad { color: var(--terra); } .bt .verdict.mid { color: var(--amber); } .bt .verdict.good { color: var(--green); }
   .bt table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin: 8px 0; }
   .bt th, .bt td { text-align: left; padding: 6px 4px; border-bottom: 1px solid var(--line); vertical-align: top; }
@@ -116,9 +123,19 @@
   <div class="chips" id="markets"></div>
   <div class="row"><label for="day">Día</label><select id="day"></select></div>
 
+  <div class="warnbox">⚠ El backtest de 10 años <b>no respalda</b> esta nota técnica (ver «¿Es fiable?» abajo). Úsala solo como lista de acciones en tendencia, no para decidir compras.</div>
   <div id="list"></div>
   <button class="more" id="more" hidden>Ver 20 más</button>
 
+  <div class="box bt" id="pp">
+    <h3>Cartera experimental · momentum</h3>
+    <div class="exp">EXPERIMENTAL — seguimiento con dinero ficticio, no es una recomendación</div>
+    <div class="chips" id="pp-tabs"></div>
+    <div id="pp-body"><p>Cargando…</p></div>
+    <div class="legend" id="pp-legend"></div>
+    <div class="chart" id="pp-chartwrap" hidden><svg id="pp-svg" role="img" aria-label="Evolución de la cartera experimental"></svg><div class="tip" id="pp-tip"></div></div>
+    <div id="pp-extra"></div>
+  </div>
   <div class="box bt" id="bt" hidden>
     <h3>¿Es fiable? · backtest 10 años</h3>
     <div class="verdict" id="bt-verdict"></div>
@@ -276,8 +293,9 @@ function btSeries(L) {
   if (L.curve.index) out.push({ key: 'index', name: idxName, color: 'var(--s3)' });
   return out;
 }
-function btChart(L) {
-  var svg = document.getElementById('bt-svg'), tip = document.getElementById('bt-tip');
+function btChart(L, id) {
+  id = id || 'bt';
+  var svg = document.getElementById(id + '-svg'), tip = document.getElementById(id + '-tip');
   var W = Math.max(280, Math.round(svg.parentNode.clientWidth)), H = W < 500 ? 220 : 260;
   var pl = 44, pr = W < 500 ? 70 : 150, pt = 10, pb = 26;
   svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H); svg.setAttribute('width', W); svg.setAttribute('height', H);
@@ -287,14 +305,27 @@ function btChart(L) {
   function x(i) { return pl + (W - pl - pr) * i / (n - 1); }
   function y(v) { return pt + (H - pt - pb) * (1 - (Math.log(v) - lo) / (hi - lo || 1)); }
   var ns = 'http://www.w3.org/2000/svg', g = [];
-  var ticks = [0.5, 1, 1.5, 2, 3, 4, 5, 6, 8].filter(function (t) { return Math.log(t) >= lo - 0.05 && Math.log(t) <= hi + 0.05; });
+  var span = Math.exp(hi) - Math.exp(lo), step = span < 0.25 ? 0.05 : span < 0.6 ? 0.1 : span < 1.5 ? 0.25 : 0;
+  var ticks = step ? [] : [0.5, 1, 1.5, 2, 3, 4, 5, 6, 8].filter(function (t) { return Math.log(t) >= lo - 0.05 && Math.log(t) <= hi + 0.05; });
+  if (step) for (var tv = Math.ceil(Math.exp(lo) / step) * step; tv <= Math.exp(hi) + 1e-9; tv += step) ticks.push(Math.round(tv * 100) / 100);
   ticks.forEach(function (t) {
     g.push('<line x1="' + pl + '" x2="' + (W - pr) + '" y1="' + y(t) + '" y2="' + y(t) + '" stroke="var(--line)" stroke-width="1"/>');
     g.push('<text x="' + (pl - 6) + '" y="' + (y(t) + 4) + '" text-anchor="end" font-size="11" fill="var(--muted)">' + fmtN.format(t) + ' €</text>');
   });
-  var years = {};
-  dates.forEach(function (d, i) { var yr = d.slice(0, 4); if (!years[yr] && d.slice(5, 7) === '01') { years[yr] = i; } });
-  Object.keys(years).forEach(function (yr) { if (+yr % 2 === 0) g.push('<text x="' + x(years[yr]) + '" y="' + (H - 6) + '" text-anchor="middle" font-size="11" fill="var(--muted)">' + yr + '</text>'); });
+  var spanDays = (new Date(dates[n - 1]) - new Date(dates[0])) / 864e5, lastM = '';
+  if (spanDays < 730) {
+    var MES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+    var every = spanDays < 200 ? 1 : 3;
+    dates.forEach(function (d, i) {
+      var ym = d.slice(0, 7), mo = +d.slice(5, 7) - 1;
+      if (ym !== lastM && i > 0 && mo % every === 0) g.push('<text x="' + x(i) + '" y="' + (H - 6) + '" text-anchor="middle" font-size="11" fill="var(--muted)">' + MES[mo] + ' ' + d.slice(2, 4) + '</text>');
+      lastM = ym;
+    });
+  } else {
+    var years = {};
+    dates.forEach(function (d, i) { var yr = d.slice(0, 4); if (!years[yr] && d.slice(5, 7) === '01') { years[yr] = i; } });
+    Object.keys(years).forEach(function (yr) { if (+yr % 2 === 0) g.push('<text x="' + x(years[yr]) + '" y="' + (H - 6) + '" text-anchor="middle" font-size="11" fill="var(--muted)">' + yr + '</text>'); });
+  }
   var labels = [];
   S.forEach(function (s) {
     var v = L.curve[s.key], dPath = v.map(function (val, i) { return (i ? 'L' : 'M') + x(i).toFixed(1) + ',' + y(val).toFixed(1); }).join('');
@@ -315,10 +346,10 @@ function btChart(L) {
       g.push('<text x="' + (x(si) + 4) + '" y="' + (pt + 10) + '" font-size="11" fill="var(--muted)">validación →</text>');
     }
   }
-  g.push('<line id="bt-x" y1="' + pt + '" y2="' + (H - pb) + '" stroke="var(--muted)" stroke-width="1" visibility="hidden"/>');
-  g.push('<rect x="' + pl + '" y="' + pt + '" width="' + (W - pl - pr) + '" height="' + (H - pt - pb) + '" fill="transparent" id="bt-hit"/>');
+  g.push('<line id="' + id + '-x" y1="' + pt + '" y2="' + (H - pb) + '" stroke="var(--muted)" stroke-width="1" visibility="hidden"/>');
+  g.push('<rect x="' + pl + '" y="' + pt + '" width="' + (W - pl - pr) + '" height="' + (H - pt - pb) + '" fill="transparent" id="' + id + '-hit"/>');
   svg.innerHTML = g.join('');
-  var hit = document.getElementById('bt-hit'), xl = document.getElementById('bt-x');
+  var hit = document.getElementById(id + '-hit'), xl = document.getElementById(id + '-x');
   function move(ev) {
     var r = svg.getBoundingClientRect(), px = (ev.clientX - r.left) * W / r.width;
     var i = Math.max(0, Math.min(n - 1, Math.round((px - pl) / (W - pl - pr) * (n - 1))));
@@ -388,7 +419,63 @@ function btRender() {
   document.getElementById('bt').hidden = false;
 }
 load('backtest.json').then(function (d) { BT.data = d; btRender(); }).catch(function () {});
-var btT; window.addEventListener('resize', function () { clearTimeout(btT); btT = setTimeout(function () { if (BT.data) btRender(); }, 150); });
+var btT; window.addEventListener('resize', function () { clearTimeout(btT); btT = setTimeout(function () { if (BT.data) btRender(); ppRender(); }, 150); });
+
+// ===================== CARTERA EXPERIMENTAL =====================
+var PP = { data: {}, tab: 'mundo' };
+var PP_NAMES = { mundo: 'Mundo (V1)', eeuu: 'EE. UU. (V2)' };
+function lastFriday(y, m) { var d = new Date(Date.UTC(y, m + 1, 0)); while (d.getUTCDay() !== 5) d.setUTCDate(d.getUTCDate() - 1); return d; }
+function nextBizDay(d) { var n = new Date(d.getTime()); do { n.setUTCDate(n.getUTCDate() + 1); } while (n.getUTCDay() === 0 || n.getUTCDay() === 6); return n; }
+function firstRebalance(created) {
+  var c = new Date(created + 'T00:00:00Z'), f = lastFriday(c.getUTCFullYear(), c.getUTCMonth());
+  if (f < c) f = lastFriday(c.getUTCFullYear(), c.getUTCMonth() + 1);
+  return { signal: f.toISOString().slice(0, 10), exec: nextBizDay(f).toISOString().slice(0, 10) };
+}
+function ppRender() {
+  var names = Object.keys(PP.data);
+  var body = document.getElementById('pp-body'), wrap = document.getElementById('pp-chartwrap'), extra = document.getElementById('pp-extra');
+  document.getElementById('pp-legend').innerHTML = ''; extra.textContent = ''; wrap.hidden = true;
+  if (!names.length) {
+    body.innerHTML = '<p>Aún no ha empezado. Arrancará en el primer rebalanceo mensual tras activarse (último viernes de mes; compra el siguiente día hábil) y se evaluará a los 12, 24 y 36 meses.</p>';
+    return;
+  }
+  if (!PP.data[PP.tab]) PP.tab = names[0];
+  chips(document.getElementById('pp-tabs'), names.map(function (k) { return [k, PP_NAMES[k] || k]; }), PP.tab, function (k) { PP.tab = k; ppRender(); });
+  var S = PP.data[PP.tab];
+  var reb = S.rebalances || [];
+  if (S.status !== 'active' || !reb.length) {
+    var fr = firstRebalance(S.created);
+    body.innerHTML = '<p><b>' + esc(S.variant_text) + '</b>. Pendiente de empezar: primera señal el ' + esc(day(fr.signal)) +
+      ', compra al cierre del ' + esc(day(fr.exec)) + '. Reglas congeladas (huella ' + esc(S.rules_fp) + ').</p>';
+    return;
+  }
+  var last = reb[reb.length - 1], nav = S.nav, n0 = nav[nav.length - 1];
+  function lastOf(arr) { return arr && arr.length ? arr[arr.length - 1][1] : null; }
+  var ix = lastOf(S.index_nav), ew = lastOf(S.ew_nav);
+  body.innerHTML = '<p><b>' + esc(S.variant_text) + '</b> · desde el ' + esc(day(reb[0].exec_date)) + ' · ' + reb.length + ' rebalanceo(s). Valor a ' + esc(day(n0[0])) + ':</p>' +
+    '<table><tr><th>Cartera</th><th class="n">Desde el inicio</th></tr>' +
+    '<tr><td>Momentum (ficticia, con costes)</td><td class="n">' + p(n0[1] - 1) + '</td></tr>' +
+    (ew != null ? '<tr><td>Universo a partes iguales</td><td class="n">' + p(ew - 1) + '</td></tr>' : '') +
+    (ix != null ? '<tr><td>' + esc(S.index) + '</td><td class="n">' + p(ix - 1) + '</td></tr>' : '') + '</table>' +
+    '<p style="margin-top:10px">Cambios del último rebalanceo (' + esc(day(last.exec_date)) + '):</p><div class="pp-list">' +
+    (last['in'].map(function (t) { return '<span class="in">+ ' + esc(t) + '</span>'; }).join('') +
+     last.out.map(function (t) { return '<span class="out">' + esc(t) + '</span>'; }).join('') || '<span>Sin cambios</span>') + '</div>' +
+    '<p>Posiciones (' + last.holdings.length + ' de 30; el resto en liquidez):</p><div class="pp-list">' +
+    last.holdings.map(function (t) { return '<span>' + esc(t) + '</span>'; }).join('') + '</div>';
+  if (nav.length >= 2) {
+    var idxMap = {}, ewMap = {};
+    (S.index_nav || []).forEach(function (x) { idxMap[x[0]] = x[1]; });
+    (S.ew_nav || []).forEach(function (x) { ewMap[x[0]] = x[1]; });
+    var L = { mom: true, index_ticker: S.index, curve: { dates: nav.map(function (x) { return x[0]; }), portfolio: nav.map(function (x) { return x[1]; }),
+      equal_weight: nav.map(function (x) { return ewMap[x[0]] || 1; }), index: S.index_nav && S.index_nav.length ? nav.map(function (x) { return idxMap[x[0]] || 1; }) : null } };
+    wrap.hidden = false;
+    document.getElementById('pp-legend').innerHTML = btSeries(L).map(function (s) { return '<span><i style="background:' + s.color + '"></i>' + esc(s.name) + '</span>'; }).join('');
+    btChart(L, 'pp');
+  }
+  extra.innerHTML = '<p>Evaluación fijada de antemano a los 12, 24 y 36 meses: batir al universo a partes iguales después de costes, sin una caída peor que la del índice + 10 puntos. Antes de 24–36 meses no hay conclusión fiable.</p>';
+}
+Promise.all(['mundo', 'eeuu'].map(function (k) { return load('paper/' + k + '.json').then(function (d) { PP.data[k] = d; }).catch(function () {}); }))
+  .then(ppRender);
 </script>
 </body>
 </html>
