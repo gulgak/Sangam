@@ -201,19 +201,20 @@ def forward_returns(px: np.ndarray, h: int) -> np.ndarray:
 
 # --------------------------------------------------------------------------- estadística
 
-def perf(r: np.ndarray, dates: pd.DatetimeIndex) -> dict:
-    """CAGR sobre fechas reales, volatilidad y Sharpe anualizados (tipo libre = 0), máxima caída."""
+def perf(r: np.ndarray, dates: pd.DatetimeIndex, ppy: int = PERIODS_PER_YEAR) -> dict:
+    """CAGR sobre fechas reales, volatilidad y Sharpe anualizados (tipo libre = 0), máxima caída.
+    `ppy`: periodos por año (52 semanal, 12 mensual)."""
     r = np.asarray(r, float)
     if len(r) == 0:
         return {}
     wealth = np.cumprod(1 + r)
-    years = (dates[len(r)] - dates[0]).days / 365.25 if len(dates) > len(r) else len(r) / PERIODS_PER_YEAR
+    years = (dates[len(r)] - dates[0]).days / 365.25 if len(dates) > len(r) else len(r) / ppy
     cagr = wealth[-1] ** (1 / years) - 1 if years > 0 and wealth[-1] > 0 else float("nan")
-    vol = float(np.std(r, ddof=1) * math.sqrt(PERIODS_PER_YEAR)) if len(r) > 1 else float("nan")
+    vol = float(np.std(r, ddof=1) * math.sqrt(ppy)) if len(r) > 1 else float("nan")
     peak = np.maximum.accumulate(np.concatenate([[1.0], wealth]))
     dd = np.concatenate([[1.0], wealth]) / peak - 1
     return {"cagr": float(cagr), "vol": vol,
-            "sharpe": float(np.mean(r) * PERIODS_PER_YEAR / vol) if vol and vol > 0 else float("nan"),
+            "sharpe": float(np.mean(r) * ppy / vol) if vol and vol > 0 else float("nan"),
             "max_dd": float(dd.min()), "total": float(wealth[-1] - 1), "years": float(years)}
 
 

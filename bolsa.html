@@ -268,10 +268,11 @@ load('latest.json').then(function (rep) {
 
 // ===================== BACKTEST =====================
 var BT = { data: null, layer: 'us_full' };
-var LAYER_NAMES = { us_full: 'EE. UU. (técnico + fundamental)', world_technical: 'Mundo (solo técnico)' };
+var LAYER_NAMES = { us_full: 'EE. UU. (técnico + fundamental)', world_technical: 'Mundo (solo técnico)',
+  mom_us: 'Nueva: momentum EE. UU.', mom_world: 'Nueva: momentum mundo' };
 function btSeries(L) {
   var idxName = L.index_ticker === 'SPY' ? 'S&P 500 (SPY)' : L.index_ticker === 'ACWI' ? 'Mundo (ACWI)' : (L.index_ticker || 'Índice');
-  var out = [{ key: 'portfolio', name: 'Radar top 30', color: 'var(--s1)' }, { key: 'equal_weight', name: 'Universo a partes iguales', color: 'var(--s2)' }];
+  var out = [{ key: 'portfolio', name: L.mom ? 'Momentum top 30' : 'Radar top 30', color: 'var(--s1)' }, { key: 'equal_weight', name: 'Universo a partes iguales', color: 'var(--s2)' }];
   if (L.curve.index) out.push({ key: 'index', name: idxName, color: 'var(--s3)' });
   return out;
 }
@@ -307,6 +308,13 @@ function btChart(L) {
     var nm = W < 500 ? '' : o.s.name.split(' (')[0].replace('Universo a partes iguales', 'Universo') + ' ';
     g.push('<text x="' + (W - pr + 6) + '" y="' + (labels[k].y + 4) + '" font-size="11" fill="var(--text)">' + esc(nm + labels[k].text) + '</text>');
   });
+  if (L.split) {
+    var si = dates.findIndex(function (d) { return d >= L.split; });
+    if (si > 0) {
+      g.push('<line x1="' + x(si) + '" x2="' + x(si) + '" y1="' + pt + '" y2="' + (H - pb) + '" stroke="var(--muted)" stroke-dasharray="3 3" stroke-width="1"/>');
+      g.push('<text x="' + (x(si) + 4) + '" y="' + (pt + 10) + '" font-size="11" fill="var(--muted)">validación →</text>');
+    }
+  }
   g.push('<line id="bt-x" y1="' + pt + '" y2="' + (H - pb) + '" stroke="var(--muted)" stroke-width="1" visibility="hidden"/>');
   g.push('<rect x="' + pl + '" y="' + pt + '" width="' + (W - pl - pr) + '" height="' + (H - pt - pb) + '" fill="transparent" id="bt-hit"/>');
   svg.innerHTML = g.join('');
@@ -331,25 +339,48 @@ function btChart(L) {
   hit.addEventListener('pointermove', move);
   hit.addEventListener('pointerleave', function () { tip.style.display = 'none'; xl.setAttribute('visibility', 'hidden'); });
 }
+function layerKeys(d) {
+  var k = Object.keys(d.layers);
+  if (d.momentum) Object.keys(d.momentum).forEach(function (m) { k.push('mom_' + m); });
+  return k;
+}
+function momView(d, key) {
+  var M = d.momentum[key.slice(4)], V = M.validation[M.chosen], D = M.design[M.chosen];
+  return { mom: M, start: M.curve.dates[0], end: M.curve.dates[M.curve.dates.length - 1], split: M.split,
+    curve: M.curve, index_ticker: key === 'mom_us' ? 'SPY' : 'ACWI', criteria: M.criteria,
+    portfolio: V.portfolio, portfolio_gross: V.portfolio_gross, equal_weight: V.equal_weight, index: V.index,
+    turnover_per_year: V.turnover_per_year, design: D };
+}
 function btRender() {
-  var d = BT.data, L = d.layers[BT.layer];
+  var d = BT.data, isMom = BT.layer.indexOf('mom_') === 0;
+  var L = isMom ? momView(d, BT.layer) : d.layers[BT.layer];
   var noFund = !(d.data && d.data.sec_with_fundamentals > 0);
   if (noFund) LAYER_NAMES.us_full = 'EE. UU. (solo técnico: sin datos SEC)';
   var passAll = L.criteria.every(function (c) { return c.pass; });
   var v = document.getElementById('bt-verdict');
   v.textContent = passAll ? '✓ Fiable según los criterios fijados' : '✗ No fiable en su forma actual';
   v.className = 'verdict ' + (passAll ? 'good' : 'bad');
-  document.getElementById('bt-sub').textContent = 'Simulación ' + day(L.start) + ' – ' + day(L.end) + ': cada semana se compran las 30 acciones con mejor nota (coste 0,1 % por operación). 1 € invertido al inicio:';
-  chips(document.getElementById('bt-layers'), Object.keys(d.layers).map(function (k) { return [k, LAYER_NAMES[k] || k]; }), BT.layer, function (k) { BT.layer = k; btRender(); });
+  document.getElementById('bt-sub').textContent = isMom
+    ? 'Señal nueva «' + L.mom.chosen_text + '» (elegida con 2016–2021 entre 3 variantes fijadas de antemano). Cada mes: entran las 30 mejores y se mantienen mientras sigan en el top 60; coste 0,1 %. Veredicto y tabla: solo periodo de validación (desde ' + day(L.split) + ', nunca usado para diseñar).'
+    : 'Señal antigua. Simulación ' + day(L.start) + ' – ' + day(L.end) + ': cada semana se compran las 30 acciones con mejor nota (coste 0,1 % por operación). 1 € invertido al inicio:';
+  chips(document.getElementById('bt-layers'), layerKeys(d).map(function (k) { return [k, LAYER_NAMES[k] || k]; }), BT.layer, function (k) { BT.layer = k; btRender(); });
   var S = btSeries(L);
   document.getElementById('bt-legend').innerHTML = S.map(function (s) { return '<span><i style="background:' + s.color + '"></i>' + esc(s.name) + '</span>'; }).join('');
   btChart(L);
   var rows = [['Radar top 30', L.portfolio], ['Radar sin costes', L.portfolio_gross], ['Universo a partes iguales', L.equal_weight]];
+  if (isMom) rows = [['Momentum (validación)', L.portfolio], ['Momentum sin costes', L.portfolio_gross], ['Momentum (diseño 2016–21)', L.design.portfolio], ['Universo a partes iguales', L.equal_weight]];
   if (L.index) rows.push([S[2].name, L.index]);
   document.getElementById('bt-table').innerHTML = '<tr><th>Estrategia</th><th class="n">Anual</th><th class="n">Sharpe</th><th class="n">Peor caída</th></tr>' +
     rows.map(function (r) { return '<tr><td>' + esc(r[0]) + '</td><td class="n">' + p(r[1].cagr) + '</td><td class="n">' + n(r[1].sharpe) + '</td><td class="n">' + p(r[1].max_dd) + '</td></tr>'; }).join('');
   document.getElementById('bt-crit').innerHTML = '<tr><th>Criterio fijado de antemano</th><th class="n">Resultado</th></tr>' +
     L.criteria.map(function (c) { return '<tr><td>' + (c.pass ? '✓ ' : '✗ ') + esc(c.text) + '</td><td class="n">' + (c.value == null ? 's/d' : (Math.abs(c.value) < 1.5 && c.id !== 'significant' ? p(c.value) : n(c.value))) + '</td></tr>'; }).join('');
+  if (isMom) {
+    var alt = ['V1', 'V2', 'V3'].map(function (v) { return v + ': ' + p(L.mom.validation[v].portfolio.cagr) + ' anual en validación'; }).join(' · ');
+    document.getElementById('bt-notes').textContent = 'Rotación: ' + n(L.turnover_per_year) + ' veces al año. Variantes (informativo, no cambian la elección): ' + alt +
+      '. Con ~57 meses de validación, un t > 2 puede darse por azar en torno al 15 % de las veces (medido en mundos aleatorios). La mitad fundamental sigue sin probar. Rentabilidades pasadas no garantizan resultados futuros.';
+    document.getElementById('bt').hidden = false;
+    return;
+  }
   document.getElementById('bt-notes').textContent = 'Rotación: ' + n(L.turnover_per_year) + ' veces la cartera al año. ' +
     (noFund ? 'La mitad fundamental NO se ha podido probar (la SEC bloqueó el acceso a sus datos). ' : '') +
     'Composición histórica del S&P 500: ' + (d.data.membership_history ? 'sí' : 'no') + ' (' + (d.data.sp500_missing_prices || 0) + ' empresas sin precios, sesgo de supervivencia residual). Rentabilidades pasadas no garantizan resultados futuros.';

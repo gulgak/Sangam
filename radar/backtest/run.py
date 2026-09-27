@@ -19,11 +19,13 @@ from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
+import numpy as np
 import pandas as pd
 
 from ..universe import BENCHMARKS, HERE
 from . import engine as en
 from . import membership as ms
+from . import momentum as mm
 from . import report as rp
 from . import sec
 
@@ -161,6 +163,29 @@ def main(argv=None) -> int:
     layer_w["sensitivity"] = rp.sensitivity(prep_w, ranks_w, elig_w, "ACWI", False)
     log.info("Capa mundial: %s", layer_w["portfolio"])
 
+    # Señal rediseñada: momentum 12-1 mensual (spec aprobada)
+    msig, mexe = mm.month_end_dates(START_SIGNALS, end)
+    keep = mexe <= pd.Timestamp(end)
+    msig, mexe = msig[keep], mexe[keep]
+    mom = {}
+    for name, univ, idx_t in (
+        ("us", us_prices, "SPY"),
+        ("world", {t: prices[t] for t in list(world) + list(us_prices) if t in prices}, "ACWI"),
+    ):
+        mp = mm.prepare({**univ, **({idx_t: prices[idx_t]} if idx_t in prices else {})}, msig, mexe, index_tickers=[idx_t])
+        elig = mp.valid.copy()
+        # composición histórica: miembros del S&P en la fecha de señal (EE. UU.)
+        wk = sorted(members)
+        for i, d in enumerate(msig):
+            j = max(0, np.searchsorted(pd.DatetimeIndex(wk), d, side="right") - 1)
+            us_mem = members[wk[j]]
+            allowed = us_mem if name == "us" else (us_mem | set(world))
+            elig[i] &= np.array([t in allowed for t in mp.tickers])
+        mom[name] = mm.evaluate(mp, elig, idx_t)
+        log.info("Momentum %s: elegida %s; validación %s; criterios %s", name, mom[name]["chosen"],
+                 {k: round(v, 4) for k, v in mom[name]["validation"][mom[name]["chosen"]]["portfolio"].items()},
+                 [(c["id"], c["pass"]) for c in mom[name]["criteria"]])
+
     # Comprobaciones contra la realidad
     sanity = []
     for t in SANITY_TICKERS:
@@ -189,6 +214,7 @@ def main(argv=None) -> int:
                  "price_coverage": sum(t in prices for t in us_all + list(world)) / (len(us_all) + len(world))},
         "sanity": sanity, "eps_checks": eps_checks,
         "layers": {"us_full": layer_us, "world_technical": layer_w},
+        "momentum": mom,
         "runtime_s": time.time() - t0,
     })
     Path(a.out).parent.mkdir(parents=True, exist_ok=True)
