@@ -110,16 +110,23 @@ def fetch_historical_components(user_agent: str = "Mozilla/5.0 (Sangam radar)") 
     Devuelve columnas date / tickers (lista) o None si no está disponible."""
     import requests
 
+    import os
+
     h = {"User-Agent": user_agent}
+    if os.environ.get("GITHUB_TOKEN"):  # evita el límite de la API anónima en Actions
+        h["Authorization"] = f"Bearer {os.environ['GITHUB_TOKEN']}"
     try:
         files = requests.get(HIST_REPO, headers=h, timeout=30).json()
+        if not isinstance(files, list):
+            log.warning("Dataset histórico: respuesta inesperada de la API: %s", str(files)[:200])
+            return None
         cands = sorted(f["name"] for f in files if f["name"].startswith("S&P 500 Historical Components")
                        and f["name"].endswith(".csv"))
         if not cands:
             log.warning("Dataset histórico: no hay CSV de componentes")
             return None
         url = next(f["download_url"] for f in files if f["name"] == cands[-1])
-        raw = pd.read_csv(io.StringIO(requests.get(url, headers=h, timeout=60).text))
+        raw = pd.read_csv(io.StringIO(requests.get(url, headers={"User-Agent": user_agent}, timeout=60).text))
         log.info("Dataset histórico: %s (%d filas)", cands[-1], len(raw))
         return parse_components(raw)
     except Exception as e:

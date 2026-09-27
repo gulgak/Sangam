@@ -32,6 +32,7 @@ jobs:
         # La SEC exige un contacto en el User-Agent
         run: |
           set -o pipefail
+          export GITHUB_TOKEN="${{ secrets.GITHUB_TOKEN }}"
           python -u -m radar.backtest.run --user-agent "Sangam radar 277532460+gulgak@users.noreply.github.com" 2>&1 | tee backtest.log
       - name: Guardar log
         if: always()
