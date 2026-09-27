@@ -170,3 +170,10 @@ def test_atypical_eps_growth_is_capped():
     _, _, _, neg = sc.fundamental_score(f)
     assert any("atípico" in x for x in neg)
     assert "tope" in sc.summary(tech(ret_12m=1.16), f, sc.LABEL_SUSTAINABLE)
+
+
+def test_suspect_pe_cannot_be_labelled_sustainable():
+    info = {**BASE_INFO, "earningsGrowth": 0.40, "currentPrice": 30.0, "trailingPE": 4.7,
+            "ttmEpsStatements": 1.3, "currency": "BRL", "financialCurrency": "BRL"}
+    lab, t, fs, f = classify(tech(), info)
+    assert f["pe_suspect"] and fs >= 55 and lab == sc.LABEL_WATCH

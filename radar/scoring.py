@@ -399,7 +399,8 @@ def label(m: dict, f: dict, tech: float, fund: float | None) -> str:
     b = f.get("backing")
     if losing or (b is not None and b < 0.5):
         return LABEL_UNBACKED
-    if b is not None and b >= 0.5 and fund is not None and fund >= 55 and tech >= 60:
+    # Con el PER dudoso no se puede confirmar la sostenibilidad.
+    if b is not None and b >= 0.5 and fund is not None and fund >= 55 and tech >= 60 and not f.get("pe_suspect"):
         return LABEL_SUSTAINABLE
     return LABEL_WATCH
 
