@@ -79,6 +79,24 @@
   .box p { margin: 6px 0; }
   .box b { color: var(--text); }
   .empty { text-align: center; color: var(--muted); padding: 40px 10px; }
+
+  /* ===== ¿Es fiable? (backtest) ===== */
+  .bt { --s1: #3987e5; --s2: #d95926; --s3: #199e70; }
+  @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) .bt { --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; } }
+  .bt .verdict { font-size: 15px; font-weight: 800; margin: 4px 0 8px; }
+  .bt .verdict.bad { color: var(--terra); } .bt .verdict.good { color: var(--green); }
+  .bt table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin: 8px 0; }
+  .bt th, .bt td { text-align: left; padding: 6px 4px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .bt th { font-size: 10.5px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); font-weight: 700; }
+  .bt td.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .bt .seg2 { display: flex; gap: 6px; margin: 8px 0; }
+  .bt .legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; color: var(--muted); margin: 6px 0; }
+  .bt .legend i { display: inline-block; width: 14px; height: 2px; vertical-align: middle; margin-right: 5px; }
+  .bt .chart { position: relative; }
+  .bt svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .bt .tip { position: absolute; pointer-events: none; background: var(--panel2); border: 1px solid var(--line); border-radius: 8px;
+             padding: 6px 8px; font-size: 12px; color: var(--text); white-space: nowrap; display: none; }
+  .bt .tip b { font-variant-numeric: tabular-nums; }
   @media (max-width: 420px) {
     .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -101,6 +119,17 @@
   <div id="list"></div>
   <button class="more" id="more" hidden>Ver 20 más</button>
 
+  <div class="box bt" id="bt" hidden>
+    <h3>¿Es fiable? · backtest 10 años</h3>
+    <div class="verdict" id="bt-verdict"></div>
+    <p id="bt-sub"></p>
+    <div class="chips" id="bt-layers"></div>
+    <div class="legend" id="bt-legend"></div>
+    <div class="chart"><svg id="bt-svg" role="img" aria-label="Evolución de 1 € invertido"></svg><div class="tip" id="bt-tip"></div></div>
+    <table id="bt-table"></table>
+    <table id="bt-crit"></table>
+    <p id="bt-notes"></p>
+  </div>
   <div class="box">
     <h3>Cómo se calcula</h3>
     <p><b>Filtro:</b> solo acciones en tendencia alcista (precio &gt; media 50 &gt; media 200 y subida a 1 y 3 meses), con datos del último cierre.</p>
@@ -236,6 +265,94 @@ load('latest.json').then(function (rep) {
   document.getElementById('meta').textContent = '';
   document.getElementById('list').innerHTML = '<div class="empty">Aún no hay informe. El radar se genera cada día laborable hacia las 8:00 (hora de Madrid).</div>';
 });
+
+// ===================== BACKTEST =====================
+var BT = { data: null, layer: 'us_full' };
+var LAYER_NAMES = { us_full: 'EE. UU. (técnico + fundamental)', world_technical: 'Mundo (solo técnico)' };
+function btSeries(L) {
+  var idxName = L.index_ticker === 'SPY' ? 'S&P 500 (SPY)' : L.index_ticker === 'ACWI' ? 'Mundo (ACWI)' : (L.index_ticker || 'Índice');
+  var out = [{ key: 'portfolio', name: 'Radar top 30', color: 'var(--s1)' }, { key: 'equal_weight', name: 'Universo a partes iguales', color: 'var(--s2)' }];
+  if (L.curve.index) out.push({ key: 'index', name: idxName, color: 'var(--s3)' });
+  return out;
+}
+function btChart(L) {
+  var svg = document.getElementById('bt-svg'), tip = document.getElementById('bt-tip');
+  var W = Math.max(280, Math.round(svg.parentNode.clientWidth)), H = W < 500 ? 220 : 260;
+  var pl = 44, pr = W < 500 ? 70 : 150, pt = 10, pb = 26;
+  svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H); svg.setAttribute('width', W); svg.setAttribute('height', H);
+  var dates = L.curve.dates, S = btSeries(L), n = dates.length;
+  var all = []; S.forEach(function (s) { all = all.concat(L.curve[s.key]); });
+  var lo = Math.log(Math.min.apply(null, all)), hi = Math.log(Math.max.apply(null, all));
+  function x(i) { return pl + (W - pl - pr) * i / (n - 1); }
+  function y(v) { return pt + (H - pt - pb) * (1 - (Math.log(v) - lo) / (hi - lo || 1)); }
+  var ns = 'http://www.w3.org/2000/svg', g = [];
+  var ticks = [0.5, 1, 1.5, 2, 3, 4, 5, 6, 8].filter(function (t) { return Math.log(t) >= lo - 0.05 && Math.log(t) <= hi + 0.05; });
+  ticks.forEach(function (t) {
+    g.push('<line x1="' + pl + '" x2="' + (W - pr) + '" y1="' + y(t) + '" y2="' + y(t) + '" stroke="var(--line)" stroke-width="1"/>');
+    g.push('<text x="' + (pl - 6) + '" y="' + (y(t) + 4) + '" text-anchor="end" font-size="11" fill="var(--muted)">' + fmtN.format(t) + ' €</text>');
+  });
+  var years = {};
+  dates.forEach(function (d, i) { var yr = d.slice(0, 4); if (!years[yr] && d.slice(5, 7) === '01') { years[yr] = i; } });
+  Object.keys(years).forEach(function (yr) { if (+yr % 2 === 0) g.push('<text x="' + x(years[yr]) + '" y="' + (H - 6) + '" text-anchor="middle" font-size="11" fill="var(--muted)">' + yr + '</text>'); });
+  var labels = [];
+  S.forEach(function (s) {
+    var v = L.curve[s.key], dPath = v.map(function (val, i) { return (i ? 'L' : 'M') + x(i).toFixed(1) + ',' + y(val).toFixed(1); }).join('');
+    g.push('<path d="' + dPath + '" fill="none" stroke="' + s.color + '" stroke-width="2" stroke-linejoin="round"/>');
+    labels.push({ y: y(v[n - 1]), text: fmtN.format(v[n - 1]) + ' €' });
+  });
+  labels.sort(function (a, b) { return a.y - b.y; });
+  for (var i = 1; i < labels.length; i++) if (labels[i].y - labels[i - 1].y < 13) labels[i].y = labels[i - 1].y + 13;
+  var order = S.map(function (s) { return { s: s, y: y(L.curve[s.key][n - 1]) }; }).sort(function (a, b) { return a.y - b.y; });
+  order.forEach(function (o, k) {
+    var nm = W < 500 ? '' : o.s.name.split(' (')[0].replace('Universo a partes iguales', 'Universo') + ' ';
+    g.push('<text x="' + (W - pr + 6) + '" y="' + (labels[k].y + 4) + '" font-size="11" fill="var(--text)">' + esc(nm + labels[k].text) + '</text>');
+  });
+  g.push('<line id="bt-x" y1="' + pt + '" y2="' + (H - pb) + '" stroke="var(--muted)" stroke-width="1" visibility="hidden"/>');
+  g.push('<rect x="' + pl + '" y="' + pt + '" width="' + (W - pl - pr) + '" height="' + (H - pt - pb) + '" fill="transparent" id="bt-hit"/>');
+  svg.innerHTML = g.join('');
+  var hit = document.getElementById('bt-hit'), xl = document.getElementById('bt-x');
+  function move(ev) {
+    var r = svg.getBoundingClientRect(), px = (ev.clientX - r.left) * W / r.width;
+    var i = Math.max(0, Math.min(n - 1, Math.round((px - pl) / (W - pl - pr) * (n - 1))));
+    xl.setAttribute('x1', x(i)); xl.setAttribute('x2', x(i)); xl.setAttribute('visibility', 'visible');
+    tip.textContent = '';
+    var hd = document.createElement('div'); hd.textContent = day(dates[i]); hd.style.color = 'var(--muted)'; tip.appendChild(hd);
+    S.forEach(function (s) {
+      var row = document.createElement('div'), k = document.createElement('i'), b = document.createElement('b'), t = document.createElement('span');
+      k.style.cssText = 'display:inline-block;width:12px;height:2px;margin-right:6px;vertical-align:middle;background:' + s.color;
+      b.textContent = fmtN.format(L.curve[s.key][i]) + ' € '; t.textContent = s.name;
+      row.appendChild(k); row.appendChild(b); row.appendChild(t); tip.appendChild(row);
+    });
+    tip.style.display = 'block';
+    var left = (x(i) / W) * r.width;
+    tip.style.left = (left > r.width / 2 ? Math.max(0, left - tip.offsetWidth - 10) : Math.min(left + 10, r.width - tip.offsetWidth)) + 'px';
+    tip.style.top = '0px';
+  }
+  hit.addEventListener('pointermove', move);
+  hit.addEventListener('pointerleave', function () { tip.style.display = 'none'; xl.setAttribute('visibility', 'hidden'); });
+}
+function btRender() {
+  var d = BT.data, L = d.layers[BT.layer];
+  var passAll = L.criteria.every(function (c) { return c.pass; });
+  var v = document.getElementById('bt-verdict');
+  v.textContent = passAll ? '✓ Fiable según los criterios fijados' : '✗ No fiable en su forma actual';
+  v.className = 'verdict ' + (passAll ? 'good' : 'bad');
+  document.getElementById('bt-sub').textContent = 'Simulación ' + day(L.start) + ' – ' + day(L.end) + ': cada semana se compran las 30 acciones con mejor nota (coste 0,1 % por operación). 1 € invertido al inicio:';
+  chips(document.getElementById('bt-layers'), Object.keys(d.layers).map(function (k) { return [k, LAYER_NAMES[k] || k]; }), BT.layer, function (k) { BT.layer = k; btRender(); });
+  var S = btSeries(L);
+  document.getElementById('bt-legend').innerHTML = S.map(function (s) { return '<span><i style="background:' + s.color + '"></i>' + esc(s.name) + '</span>'; }).join('');
+  btChart(L);
+  var rows = [['Radar top 30', L.portfolio], ['Radar sin costes', L.portfolio_gross], ['Universo a partes iguales', L.equal_weight]];
+  if (L.index) rows.push([S[2].name, L.index]);
+  document.getElementById('bt-table').innerHTML = '<tr><th>Estrategia</th><th class="n">Anual</th><th class="n">Sharpe</th><th class="n">Peor caída</th></tr>' +
+    rows.map(function (r) { return '<tr><td>' + esc(r[0]) + '</td><td class="n">' + p(r[1].cagr) + '</td><td class="n">' + n(r[1].sharpe) + '</td><td class="n">' + p(r[1].max_dd) + '</td></tr>'; }).join('');
+  document.getElementById('bt-crit').innerHTML = '<tr><th>Criterio fijado de antemano</th><th class="n">Resultado</th></tr>' +
+    L.criteria.map(function (c) { return '<tr><td>' + (c.pass ? '✓ ' : '✗ ') + esc(c.text) + '</td><td class="n">' + (c.value == null ? 's/d' : (Math.abs(c.value) < 1.5 && c.id !== 'significant' ? p(c.value) : n(c.value))) + '</td></tr>'; }).join('');
+  document.getElementById('bt-notes').textContent = 'Rotación: ' + n(L.turnover_per_year) + ' veces la cartera al año. Sesgos: universo con supervivientes, fundamentales solo de EE. UU. (SEC), sin PER forward ni precios objetivo históricos. Rentabilidades pasadas no garantizan resultados futuros.';
+  document.getElementById('bt').hidden = false;
+}
+load('backtest.json').then(function (d) { BT.data = d; btRender(); }).catch(function () {});
+var btT; window.addEventListener('resize', function () { clearTimeout(btT); btT = setTimeout(function () { if (BT.data) btChart(BT.data.layers[BT.layer]); }, 150); });
 </script>
 </body>
 </html>

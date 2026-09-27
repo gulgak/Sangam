@@ -30,8 +30,18 @@ jobs:
         run: python -m pytest radar/tests -q
       - name: Backtest (10 años)
         # La SEC exige un contacto en el User-Agent
-        run: python -m radar.backtest.run --user-agent "Sangam radar 277532460+gulgak@users.noreply.github.com"
+        run: |
+          set -o pipefail
+          python -u -m radar.backtest.run --user-agent "Sangam radar 277532460+gulgak@users.noreply.github.com" 2>&1 | tee backtest.log
+      - name: Guardar log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backtest-log
+          path: backtest.log
+          if-no-files-found: ignore
       - name: Publicar resultado
+        if: success()
         run: |
           git config user.name "radar-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

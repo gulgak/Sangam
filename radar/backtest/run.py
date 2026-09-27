@@ -106,7 +106,7 @@ def main(argv=None) -> int:
 
     prices = download(us_all + sorted(world) + indices)
     missing_us = [t for t in us_all if t not in prices]
-    log.info("Sin precios: %d del S&P histórico", len(missing_us))
+    log.info("Sin precios: %d del S&P histórico (%.0fs)", len(missing_us), time.time() - t0)
 
     # Fundamentales SEC
     client = sec.SecClient(a.user_agent)
@@ -133,7 +133,10 @@ def main(argv=None) -> int:
         if t in {c[0] for c in EPS_CHECKS}:
             check_facts[t] = facts
         if n % 100 == 0:
-            log.info("SEC: %d / %d", n, len(us_all))
+            log.info("SEC: %d / %d (ok %d, fallos %d, estados %s) %.0fs", n, len(us_all), client.ok, client.fail,
+                     client.status, time.time() - t0)
+        if client.disabled:
+            break
     for t, fy in EPS_CHECKS:
         f = check_facts.get(t)
         eps_checks.append({"ticker": t, "fy": fy,
@@ -146,7 +149,7 @@ def main(argv=None) -> int:
     ranks_us, elig_us = en.signals(prep_us, members, fundamentals, sectors, full=True)
     layer_us = rp.analyze(prep_us, ranks_us, elig_us, "SPY", full=True)
     layer_us["sensitivity"] = rp.sensitivity(prep_us, ranks_us, elig_us, "SPY", True)
-    log.info("Capa EE. UU.: %s", layer_us["portfolio"])
+    log.info("Capa EE. UU.: %s (%.0fs)", layer_us["portfolio"], time.time() - t0)
 
     # Capa 1: técnica mundial
     w_prices = {t: prices[t] for t in list(world) + list(us_prices) if t in prices}
@@ -182,6 +185,7 @@ def main(argv=None) -> int:
                  "missing_examples": missing_us[:40], "world_tickers": len(world),
                  "world_with_prices": sum(t in prices for t in world),
                  "sec_with_fundamentals": len(fundamentals), "sec_ticker_map": len(cik),
+                 "sec_status": {str(k): v for k, v in client.status.items()}, "sec_disabled": client.disabled,
                  "price_coverage": sum(t in prices for t in us_all + list(world)) / (len(us_all) + len(world))},
         "sanity": sanity, "eps_checks": eps_checks,
         "layers": {"us_full": layer_us, "world_technical": layer_w},

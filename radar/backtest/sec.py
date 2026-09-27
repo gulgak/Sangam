@@ -188,25 +188,40 @@ def info_from_snapshot(snap: dict | None, close_unadj: float | None, sector: str
 class SecClient:
     """Cliente mínimo de EDGAR respetando su límite (10 peticiones/s) y su User-Agent."""
 
-    def __init__(self, user_agent: str, pause: float = 0.12):
+    def __init__(self, user_agent: str, pause: float = 0.12, breaker: int = 25):
         import requests
 
         self.s = requests.Session()
         self.s.headers.update({"User-Agent": user_agent, "Accept-Encoding": "gzip, deflate"})
         self.pause = pause
+        self.breaker = breaker
+        self.ok = 0
+        self.fail = 0
+        self.status: dict[int, int] = {}
+        self.disabled = False
 
     def _get(self, url: str):
-        for attempt in range(4):
+        """403/404 son definitivos (sin reintento). Si las primeras `breaker` peticiones
+        fallan todas, el cliente se desactiva para no agotar el tiempo de la ejecución."""
+        if self.disabled:
+            return None
+        for attempt in range(3):
             try:
                 r = self.s.get(url, timeout=60)
                 time.sleep(self.pause)
-                if r.status_code == 404:
-                    return None
+                self.status[r.status_code] = self.status.get(r.status_code, 0) + 1
+                if r.status_code in (403, 404):
+                    break
                 r.raise_for_status()
+                self.ok += 1
                 return r.json()
             except Exception as e:
                 log.warning("SEC %s intento %d: %s", url, attempt + 1, e)
                 time.sleep(2 * (attempt + 1))
+        self.fail += 1
+        if self.ok == 0 and self.fail >= self.breaker:
+            log.error("SEC: %d fallos seguidos sin ningún éxito (%s); se desactiva", self.fail, self.status)
+            self.disabled = True
         return None
 
     def _get_text(self, url: str) -> str | None:

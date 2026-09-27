@@ -251,3 +251,16 @@ def test_historical_components_dataset():
 def test_ciks_from_wikipedia_table():
     cur = pd.DataFrame({"Symbol": ["AAPL", "BRK.B"], "GICS Sector": ["IT", "Financials"], "CIK": [320193, "1067983"]})
     assert ms.ciks_from_current(cur) == {"AAPL": 320193, "BRK-B": 1067983}
+
+
+def test_sec_client_breaker_and_no_retry_on_403(monkeypatch):
+    calls = []
+
+    class R:
+        status_code = 403
+
+    client = sec.SecClient("test test@example.com", pause=0, breaker=3)
+    monkeypatch.setattr(client.s, "get", lambda url, timeout: calls.append(url) or R())
+    for _ in range(5):
+        assert client.companyfacts(1) is None
+    assert len(calls) == 3 and client.disabled   # un intento por petición y corte a las 3
