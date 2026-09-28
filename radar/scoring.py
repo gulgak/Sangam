@@ -96,6 +96,63 @@ def technical_metrics(df: pd.DataFrame, bench_close: pd.Series | None) -> dict |
     return m
 
 
+PANEL_COLS = ["price", "sma20", "sma50", "sma200", "sma200_20d_ago", "golden_cross_60d", "rsi",
+              "macd", "macd_signal", "macd_hist", "macd_hist_prev", "adx", "rvol", "high_52w",
+              "dist_52w_high", "low_52w", "ret_1m", "ret_3m", "ret_6m", "ret_12m", "rs_3m", "rs_6m"]
+
+
+def technical_panel(df: pd.DataFrame, bench_close: pd.Series | None) -> pd.DataFrame:
+    """Las mismas métricas que `technical_metrics`, pero para todas las fechas a la vez
+    (para el backtest). Todos los cálculos son causales: la fila t solo usa datos <= t.
+    Las filas con menos de MIN_HISTORY sesiones quedan a NaN."""
+    df = df.dropna(subset=["Close"])
+    close, high, low, vol = df["Close"], df["High"], df["Low"], df["Volume"]
+    sma20, sma50, sma200 = ind.sma(close, 20), ind.sma(close, 50), ind.sma(close, 200)
+    macd_line, macd_sig, macd_hist = ind.macd(close)
+    high_52w = high.rolling(252, min_periods=1).max()
+    vol50 = vol.rolling(50, min_periods=1).mean()
+    cross = ((sma50 > sma200) & (sma50.shift(1) <= sma200.shift(1))).astype(float)
+    p = pd.DataFrame({
+        "price": close,
+        "sma20": sma20, "sma50": sma50, "sma200": sma200,
+        "sma200_20d_ago": sma200.shift(20),
+        "golden_cross_60d": cross.rolling(60, min_periods=1).max(),
+        "rsi": ind.rsi(close),
+        "macd": macd_line, "macd_signal": macd_sig, "macd_hist": macd_hist,
+        "macd_hist_prev": macd_hist.shift(1),
+        "adx": ind.adx(high, low, close),
+        "rvol": (vol.rolling(5, min_periods=1).mean() / vol50).where(vol50 > 0),
+        "high_52w": high_52w,
+        "dist_52w_high": (close / high_52w - 1).where(high_52w > 0),
+        "low_52w": close.rolling(252, min_periods=1).min(),
+    }, index=df.index)
+    for key, days in (("ret_1m", 21), ("ret_3m", 63), ("ret_6m", 126), ("ret_12m", 252)):
+        past = close.shift(days)
+        p[key] = (close / past - 1).where(past != 0)
+    p["rs_3m"] = np.nan
+    p["rs_6m"] = np.nan
+    if bench_close is not None:
+        b = bench_close.dropna()
+        for key, src, days in (("rs_3m", "ret_3m", 63), ("rs_6m", "ret_6m", 126)):
+            br = (b / b.shift(days) - 1).where(b.shift(days) != 0)
+            br = br.reindex(b.index.union(p.index)).ffill().reindex(p.index)
+            # Sin sesiones suficientes del índice hasta t -> sin dato
+            enough = pd.Series(np.arange(1, len(b) + 1) > days, index=b.index)
+            enough = enough.reindex(b.index.union(p.index)).ffill().reindex(p.index).fillna(False).astype(bool)
+            p[key] = (p[src] - br).where(enough)
+    p = p.replace([np.inf, -np.inf], np.nan)
+    p.loc[np.arange(len(p)) + 1 < MIN_HISTORY, :] = np.nan
+    return p[PANEL_COLS]
+
+
+def panel_row_to_metrics(row: pd.Series, date) -> dict:
+    """Convierte una fila de `technical_panel` al dict de `technical_metrics`."""
+    m = {k: _f(row[k]) for k in PANEL_COLS}
+    m["golden_cross_60d"] = bool(m["golden_cross_60d"])
+    m["last_date"] = pd.Timestamp(date).strftime("%Y-%m-%d")
+    return m
+
+
 def is_uptrend(m: dict) -> bool:
     """Precio > SMA50 > SMA200 y rentabilidad positiva a 1 y 3 meses."""
     need = (m.get("sma50"), m.get("sma200"), m.get("ret_1m"), m.get("ret_3m"))
