@@ -1,0 +1,60 @@
+name: Radar de Bolsa
+
+on:
+  schedule:
+    # UTC. Con el control de hora de radar/guard.py corre a las ~7:30 de Madrid
+    # todo el año (verano: primera franja; invierno: segunda), de lunes a viernes.
+    - cron: "30 5 * * 1-5"
+    - cron: "30 6 * * 1-5"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: radar-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  radar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: ¿Toca ejecutar?
+        id: guard
+        run: python3 radar/guard.py
+
+      - uses: actions/setup-python@v5
+        if: steps.guard.outputs.run == 'true'
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: radar/requirements.txt
+
+      - name: Dependencias
+        if: steps.guard.outputs.run == 'true'
+        run: pip install -r radar/requirements.txt
+
+      - name: Tests
+        if: steps.guard.outputs.run == 'true'
+        run: python -m pytest radar/tests -q
+
+      - name: Análisis
+        if: steps.guard.outputs.run == 'true'
+        run: python -m radar.radar --source yahoo
+
+      - name: Publicar informe
+        if: steps.guard.outputs.run == 'true'
+        run: |
+          git config user.name "radar-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/radar
+          if git diff --cached --quiet; then echo "Sin cambios"; exit 0; fi
+          git commit -m "Radar de Bolsa: informe $(TZ=Europe/Madrid date +%F)"
+          for i in 1 2 3 4; do
+            git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && exit 0
+            sleep $((i * 5))
+          done
+          exit 1

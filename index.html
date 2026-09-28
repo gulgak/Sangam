@@ -22,6 +22,7 @@
     --green: #7FBF8E;
     --terra: #C9714F;
     --blue: #7FA8E8;
+    --violet: #B39DDB;
     --barH: 60px;
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -116,6 +117,10 @@
     <div class="loader"><div class="dot" style="background:var(--terra)"></div><div class="lname" data-name="asesor"></div><div class="lhint" data-hint></div></div>
   </div>
 
+  <div class="pane" id="pane-bolsa" data-src="bolsa.html">
+    <div class="loader"><div class="dot" style="background:var(--violet)"></div><div class="lname" data-name="bolsa"></div><div class="lhint" data-hint></div></div>
+  </div>
+
   <div class="pane" id="pane-ajustes">
     <div id="settings">
       <div class="s-head">
@@ -126,6 +131,7 @@
           <span class="mini" style="background:var(--green)"></span><span data-t="n_ann"></span>
           <span class="mini" style="background:var(--gold)"></span><span data-t="n_gas"></span>
           <span class="mini" style="background:var(--terra)"></span><span data-t="n_ase"></span>
+          <span class="mini" style="background:var(--violet)"></span><span data-t="n_bol"></span>
         </div>
       </div>
 
@@ -161,10 +167,11 @@
           <a href="annapurna.html" target="_blank" rel="noopener"><span class="mini" style="background:var(--green)"></span><span data-t="n_ann"></span><span class="arrow">›</span></a>
           <a href="gastos.html" target="_blank" rel="noopener"><span class="mini" style="background:var(--gold)"></span><span data-t="n_gas"></span><span class="arrow">›</span></a>
           <a href="asesor.html" target="_blank" rel="noopener"><span class="mini" style="background:var(--terra)"></span><span data-t="n_ase"></span><span class="arrow">›</span></a>
+          <a href="bolsa.html" target="_blank" rel="noopener"><span class="mini" style="background:var(--violet)"></span><span data-t="n_bol"></span><span class="arrow">›</span></a>
         </div>
       </div>
 
-      <div class="version">SANGAM · v1.2</div>
+      <div class="version">SANGAM · v1.3</div>
     </div>
   </div>
 </div>
@@ -186,6 +193,10 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/></svg>
     <span data-t="t_ase"></span><span class="ind"></span>
   </button>
+  <button class="tab" data-tab="bolsa" onclick="show('bolsa')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 7 13.5 15.5 8.5 10.5 2 17"/><path d="M16 7h6v6"/></svg>
+    <span data-t="t_bol"></span><span class="ind"></span>
+  </button>
   <button class="tab" data-tab="ajustes" onclick="show('ajustes')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
     <span data-t="t_set"></span><span class="ind"></span>
@@ -198,9 +209,9 @@ var LANG = localStorage.getItem('suite_lang') || 'es';
 
 var STR = {
   es: {
-    t_ent: 'Entrenador', t_ann: 'Annapurna', t_gas: 'Gastos', t_ase: 'Asesor', t_set: 'Ajustes',
-    n_ent: 'Entrenador', n_ann: 'Annapurna', n_gas: 'GastoFlow', n_ase: 'El Asesor',
-    suite: '· tus cuatro apps ·',
+    t_ent: 'Entrenador', t_ann: 'Annapurna', t_gas: 'Gastos', t_ase: 'Asesor', t_bol: 'Bolsa', t_set: 'Ajustes',
+    n_ent: 'Entrenador', n_ann: 'Annapurna', n_gas: 'GastoFlow', n_ase: 'El Asesor', n_bol: 'Radar de Bolsa',
+    suite: '· tus cinco apps ·',
     lang_h: 'Idioma de las tres apps',
     lang_hint: 'Cambia el idioma del Entrenador, Annapurna y el Asesor a la vez. (GastoFlow aún está solo en español.)',
     key_h: 'Clave de Google Gemini (compartida)',
@@ -209,16 +220,16 @@ var STR = {
     key_saved: '✓ Clave guardada para todas las apps',
     key_set: '✓ Ya hay una clave guardada',
     maint_h: 'Mantenimiento',
-    reload: 'Recargar las cuatro apps',
+    reload: 'Recargar las cinco apps',
     reload_hint: 'Úsalo si tras subir una versión nueva sigues viendo la antigua (caché).',
     open_h: 'Abrir una app a pantalla completa',
     loading: 'cargando…',
     loading_big: 'la primera vez tarda un poco (4 MB)'
   },
   en: {
-    t_ent: 'Trainer', t_ann: 'Annapurna', t_gas: 'Expenses', t_ase: 'Advisor', t_set: 'Settings',
-    n_ent: 'Trainer', n_ann: 'Annapurna', n_gas: 'GastoFlow', n_ase: 'The Advisor',
-    suite: '· your four apps ·',
+    t_ent: 'Trainer', t_ann: 'Annapurna', t_gas: 'Expenses', t_ase: 'Advisor', t_bol: 'Stocks', t_set: 'Settings',
+    n_ent: 'Trainer', n_ann: 'Annapurna', n_gas: 'GastoFlow', n_ase: 'The Advisor', n_bol: 'Stock Radar',
+    suite: '· your five apps ·',
     lang_h: 'Language for all three apps',
     lang_hint: 'Switches the Trainer, Annapurna and the Advisor at once. (GastoFlow is still Spanish-only.)',
     key_h: 'Google Gemini key (shared)',
@@ -227,7 +238,7 @@ var STR = {
     key_saved: '✓ Key saved for all the apps',
     key_set: '✓ A key is already saved',
     maint_h: 'Maintenance',
-    reload: 'Reload the four apps',
+    reload: 'Reload the five apps',
     reload_hint: 'Use this if you still see an old version after uploading a new one (cache).',
     open_h: 'Open an app full screen',
     loading: 'loading…',
@@ -235,7 +246,7 @@ var STR = {
   }
 };
 
-var APP_NAMES = { entrenador: { es: 'Entrenador', en: 'Trainer' }, annapurna: { es: 'Annapurna', en: 'Annapurna' }, gastos: { es: 'GastoFlow', en: 'GastoFlow' }, asesor: { es: 'El Asesor', en: 'The Advisor' } };
+var APP_NAMES = { entrenador: { es: 'Entrenador', en: 'Trainer' }, annapurna: { es: 'Annapurna', en: 'Annapurna' }, gastos: { es: 'GastoFlow', en: 'GastoFlow' }, asesor: { es: 'El Asesor', en: 'The Advisor' }, bolsa: { es: 'Radar de Bolsa', en: 'Stock Radar' } };
 
 function t(k) { return (STR[LANG] && STR[LANG][k]) || STR.es[k] || k; }
 
@@ -312,7 +323,7 @@ function show(name) {
 }
 
 function reloadApps(onlyLoaded) {
-  ['entrenador', 'annapurna', 'gastos', 'asesor'].forEach(function (n) {
+  ['entrenador', 'annapurna', 'gastos', 'asesor', 'bolsa'].forEach(function (n) {
     if (loaded[n]) mount(n, true);
   });
 }

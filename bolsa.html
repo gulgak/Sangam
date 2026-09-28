@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Radar de Bolsa</title>
+<meta name="theme-color" content="#14110E">
+<style>
+  :root {
+    --bg: #14110E; --panel: #1F1A14; --panel2: #2A231B; --line: rgba(232, 188, 94, 0.14);
+    --gold: #E8BC5E; --muted: #8A7D6A; --text: #F0E8DA; --green: #7FBF8E; --terra: #C9714F;
+    --blue: #7FA8E8; --violet: #B39DDB; --amber: #E0A458; --onGold: #14110E;
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --bg: #F7F1E6; --panel: #FFFDF8; --panel2: #F1E8D8; --line: rgba(120, 90, 30, 0.16);
+      --gold: #9A6B12; --muted: #7A6C58; --text: #231C12; --green: #2F7A45; --terra: #A64B2A;
+      --blue: #2F5FA8; --violet: #6A4FA8; --amber: #9A5B0E; --onGold: #FFFDF8;
+    }
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); }
+  body { font-family: -apple-system, 'Segoe UI', Roboto, sans-serif; font-size: 14px; line-height: 1.45;
+         padding: max(16px, env(safe-area-inset-top, 0px)) 16px 40px; overflow-x: hidden; }
+  .wrap { max-width: 760px; margin: 0 auto; }
+  .num { font-variant-numeric: tabular-nums; }
+
+  header { text-align: center; margin: 10px 0 18px; }
+  .eyebrow { font-size: 10px; text-transform: uppercase; letter-spacing: 3px; color: var(--muted); }
+  h1 { font-family: 'Fraunces', Georgia, serif; font-weight: 600; font-size: 32px; margin: 4px 0 6px; }
+  h1 em { font-style: italic; color: var(--violet); }
+  .meta { font-size: 12px; color: var(--muted); }
+
+  .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-bottom: 14px; }
+  .stat { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 10px 8px; text-align: center; }
+  .stat b { display: block; font-size: 18px; }
+  .stat span { font-size: 10.5px; color: var(--muted); }
+
+  .chips { display: flex; gap: 6px; overflow-x: auto; padding: 2px 0 8px; scrollbar-width: none; }
+  .chips::-webkit-scrollbar { display: none; }
+  .chip { flex: none; border: 1px solid var(--line); background: var(--panel); color: var(--muted);
+          border-radius: 999px; padding: 7px 12px; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+  .chip.on { background: var(--gold); color: var(--onGold); border-color: var(--gold); }
+  .row { display: flex; gap: 8px; align-items: center; margin: 4px 0 12px; }
+  .row label { font-size: 12px; color: var(--muted); }
+  select { background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 10px; padding: 7px 10px; font-size: 13px; }
+
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 14px; margin-bottom: 12px; }
+  .top { display: flex; gap: 12px; align-items: flex-start; }
+  .rank { font-size: 12px; color: var(--muted); font-weight: 700; min-width: 22px; padding-top: 2px; }
+  .who { flex: 1; min-width: 0; }
+  .tk { font-weight: 800; font-size: 16px; letter-spacing: .3px; }
+  .nm { color: var(--muted); font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .score { width: 52px; height: 52px; border-radius: 50%; flex: none; display: grid; place-items: center;
+           font-weight: 800; font-size: 17px; border: 3px solid var(--line); }
+  .pill { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 999px; margin-top: 6px; }
+  .l-sost { background: color-mix(in srgb, var(--green) 20%, transparent); color: var(--green); }
+  .l-obs { background: color-mix(in srgb, var(--blue) 20%, transparent); color: var(--blue); }
+  .l-sin { background: color-mix(in srgb, var(--amber) 22%, transparent); color: var(--amber); }
+  .l-sob { background: color-mix(in srgb, var(--terra) 22%, transparent); color: var(--terra); }
+  .mk { font-size: 11px; color: var(--muted); margin-left: 6px; font-weight: 600; }
+  .sum { margin: 10px 0; font-size: 13px; }
+  .grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+  .kv { background: var(--panel2); border-radius: 10px; padding: 7px 8px; min-width: 0; }
+  .kv span { display: block; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .kv b { font-size: 13.5px; }
+  .warn { color: var(--amber); cursor: help; }
+  .pos { color: var(--green); } .neg { color: var(--terra); }
+  .bars { display: grid; grid-template-columns: auto 1fr auto; gap: 4px 8px; align-items: center; margin-top: 10px; font-size: 11.5px; color: var(--muted); }
+  .bar { height: 6px; background: var(--panel2); border-radius: 3px; overflow: hidden; }
+  .bar i { display: block; height: 100%; border-radius: 3px; }
+  details { margin-top: 10px; }
+  summary { cursor: pointer; font-size: 12.5px; color: var(--gold); font-weight: 600; }
+  ul.sig { margin: 8px 0 0; padding-left: 18px; font-size: 12.5px; }
+  ul.sig li { margin: 2px 0; }
+  .more { width: 100%; border: 1px solid var(--line); background: var(--panel); color: var(--text); border-radius: 12px; padding: 12px; font-weight: 700; cursor: pointer; }
+  .box { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 14px; margin-top: 16px; font-size: 12.5px; color: var(--muted); }
+  .box h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 2px; margin: 0 0 8px; color: var(--muted); }
+  .box p { margin: 6px 0; }
+  .box b { color: var(--text); }
+  .empty { text-align: center; color: var(--muted); padding: 40px 10px; }
+  @media (max-width: 420px) {
+    .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Radar diario · bolsa mundial</div>
+    <h1>Bol<em>sa</em></h1>
+    <div class="meta" id="meta">Cargando…</div>
+  </header>
+
+  <div class="stats" id="stats"></div>
+  <div class="chips" id="labels"></div>
+  <div class="chips" id="markets"></div>
+  <div class="row"><label for="day">Día</label><select id="day"></select></div>
+
+  <div id="list"></div>
+  <button class="more" id="more" hidden>Ver 20 más</button>
+
+  <div class="box">
+    <h3>Cómo se calcula</h3>
+    <p><b>Filtro:</b> solo acciones en tendencia alcista (precio &gt; media 50 &gt; media 200 y subida a 1 y 3 meses), con datos del último cierre.</p>
+    <p><b>Técnico (50 %):</b> medias móviles, RSI (ideal 50–70), MACD, ADX, volumen relativo, cercanía al máximo de 52 semanas y fuerza frente a su índice.</p>
+    <p><b>Fundamental (50 %):</b> PER forward frente al actual, PEG, PER frente a su sector, <b>respaldo de la subida</b> (qué parte de la subida de 12 meses se explica por el crecimiento del beneficio y no por la expansión del PER), ROE, deuda, ingresos y precio objetivo de analistas.</p>
+    <p><b>Controles de calidad:</b> el PER de Yahoo se contrasta con precio / BPA de los 4 últimos trimestres; si difieren más de un 15 % se marca ⚠, no puntúa y la acción no puede etiquetarse como «Subida sostenible». Crecimientos del BPA superiores a +150 % se tratan como atípicos (efecto base) y se limitan a +150 %.</p>
+    <p><b>Etiquetas:</b> «Subida sostenible» = tendencia fuerte con beneficio creciente detrás. «Momentum sin respaldo» = sube sobre todo el PER o hay pérdidas. «Sobrecomprada» = RSI &gt; 75 o &gt;25 % sobre su media de 50.</p>
+    <p>Fuentes: Jegadeesh &amp; Titman (1993); George &amp; Hwang (2004); Wilder (1978); Lynch (1989). Datos: Yahoo Finance (gratuitos, pueden tener huecos).</p>
+  </div>
+  <div class="box">
+    <h3>Aviso</h3>
+    <p>Herramienta de cribado automático con fines informativos. <b>No es asesoramiento financiero</b> ni una recomendación de compra o venta. Rentabilidades pasadas no garantizan resultados futuros. Verifica los datos antes de invertir.</p>
+  </div>
+</div>
+
+<script>
+var BASE = 'data/radar/';
+var LABELS = [
+  ['Subida sostenible', 'l-sost'], ['En observación', 'l-obs'],
+  ['Momentum sin respaldo', 'l-sin'], ['Sobrecomprada', 'l-sob']
+];
+var state = { report: null, label: 'all', market: 'all', shown: 20 };
+var fmtN = new Intl.NumberFormat('es-ES', { maximumFractionDigits: 1, minimumFractionDigits: 1 });
+var fmtP = new Intl.NumberFormat('es-ES', { style: 'percent', maximumFractionDigits: 0, signDisplay: 'exceptZero' });
+var fmtS = new Intl.NumberFormat('es-ES', { style: 'percent', maximumFractionDigits: 0 });
+var fmtD = new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function n(v) { return v == null ? '—' : fmtN.format(v); }
+function p(v) { return v == null ? '—' : fmtP.format(v); }
+function share(v) { return v == null ? '—' : fmtS.format(v); }
+function sp(v) { return v == null ? '' : (v > 0 ? 'pos' : v < 0 ? 'neg' : ''); }
+function day(s) { return s ? fmtD.format(new Date(s + 'T12:00:00')) : '—'; }
+function labelClass(l) { for (var i = 0; i < LABELS.length; i++) if (LABELS[i][0] === l) return LABELS[i][1]; return 'l-obs'; }
+function scoreColor(s) { return s >= 75 ? 'var(--green)' : s >= 60 ? 'var(--gold)' : s >= 45 ? 'var(--amber)' : 'var(--terra)'; }
+
+function load(file) {
+  return fetch(BASE + file + '?t=' + Date.now(), { cache: 'no-store' }).then(function (r) {
+    if (!r.ok) throw new Error(r.status);
+    return r.json();
+  });
+}
+
+function chips(el, items, current, onPick) {
+  el.innerHTML = items.map(function (it) {
+    return '<button class="chip' + (it[0] === current ? ' on' : '') + '" data-v="' + esc(it[0]) + '">' + esc(it[1]) + '</button>';
+  }).join('');
+  el.querySelectorAll('.chip').forEach(function (b) { b.onclick = function () { onPick(b.getAttribute('data-v')); }; });
+}
+
+function filtered() {
+  return state.report.ranking.filter(function (x) {
+    return (state.label === 'all' || x.label === state.label) && (state.market === 'all' || x.market === state.market);
+  });
+}
+
+function card(x) {
+  var pe = x.loss_making ? 'Pérdidas' : n(x.pe_trailing) + (x.pe_suspect ? ' <span class="warn" title="No cuadra con los estados financieros (' + n(x.pe_check) + ')">⚠</span>' : '');
+  var epsTxt = p(x.eps_growth) + (x.eps_atypical ? ' <span class="warn" title="Dato original ' + p(x.eps_growth_raw) + ': probable efecto base">⚠</span>' : '');
+  var peSec = (x.pe_trailing && x.pe_sector_median) ? n(x.pe_sector_median) : '—';
+  var pos = (x.signals_pos || []).map(function (s) { return '<li class="pos">' + esc(s) + '</li>'; }).join('');
+  var neg = (x.signals_neg || []).map(function (s) { return '<li class="neg">' + esc(s) + '</li>'; }).join('');
+  var fund = x.fund_score == null ? 0 : x.fund_score;
+  return '<article class="card">' +
+    '<div class="top"><div class="rank num">#' + x.rank + '</div>' +
+    '<div class="who"><div class="tk">' + esc(x.ticker) + '<span class="mk">' + esc(x.market_name) + ' · ' + esc(x.sector) + '</span></div>' +
+    '<div class="nm">' + esc(x.name) + ' · <span class="num">' + n(x.price) + ' ' + esc(x.currency || '') + '</span></div>' +
+    '<span class="pill ' + labelClass(x.label) + '">' + esc(x.label) + '</span></div>' +
+    '<div class="score num" style="border-color:' + scoreColor(x.score) + ';color:' + scoreColor(x.score) + '" title="Puntuación 0–100">' + Math.round(x.score) + '</div></div>' +
+    '<p class="sum">' + esc(x.summary) + '</p>' +
+    '<div class="grid num">' +
+      '<div class="kv"><span>PER</span><b>' + pe + '</b></div>' +
+      '<div class="kv"><span>PER forward</span><b>' + n(x.pe_forward) + '</b></div>' +
+      '<div class="kv"><span>PEG</span><b>' + n(x.peg) + '</b></div>' +
+      '<div class="kv"><span>PER sector</span><b>' + peSec + '</b></div>' +
+      '<div class="kv"><span>RSI</span><b>' + n(x.rsi) + '</b></div>' +
+      '<div class="kv"><span>3 meses</span><b class="' + sp(x.ret_3m) + '">' + p(x.ret_3m) + '</b></div>' +
+      '<div class="kv"><span>12 meses</span><b class="' + sp(x.ret_12m) + '">' + p(x.ret_12m) + '</b></div>' +
+      '<div class="kv"><span>Crec. BPA</span><b class="' + sp(x.eps_growth) + '">' + epsTxt + '</b></div>' +
+    '</div>' +
+    '<div class="bars num"><span>Técnico</span><div class="bar"><i style="width:' + x.tech_score + '%;background:var(--blue)"></i></div><span>' + Math.round(x.tech_score) + '</span>' +
+    '<span>Fundamental</span><div class="bar"><i style="width:' + fund + '%;background:var(--violet)"></i></div><span>' + (x.fund_score == null ? 's/d' : Math.round(x.fund_score)) + '</span></div>' +
+    '<details><summary>Señales y detalle</summary><ul class="sig">' + pos + neg + '</ul>' +
+    '<ul class="sig num" style="color:var(--muted)">' +
+      '<li>Respaldo de la subida por BPA: ' + share(x.backing) + ' · expansión del PER: ' + p(x.pe_expansion) + '</li>' +
+      '<li>Distancia a máximos 52 sem.: ' + p(x.dist_52w_high) + ' · ADX ' + n(x.adx) + ' · volumen ' + n(x.rvol) + 'x</li>' +
+      '<li>Vs. su índice: 3 m ' + p(x.rs_3m) + ' · 6 m ' + p(x.rs_6m) + '</li>' +
+      '<li>ROE ' + p(x.roe) + ' · ingresos ' + p(x.revenue_growth) + ' · objetivo analistas ' + p(x.target_upside) + '</li>' +
+      '<li>Último cierre: ' + day(x.last_date) + '</li>' +
+    '</ul></details></article>';
+}
+
+function render() {
+  var r = state.report;
+  document.getElementById('meta').textContent = 'Cierre del ' + day(r.data_date) + ' · generado ' + new Date(r.generated_at).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' });
+  document.getElementById('stats').innerHTML =
+    '<div class="stat num"><b>' + r.universe_size + '</b><span>universo</span></div>' +
+    '<div class="stat num"><b>' + r.analysed + '</b><span>con datos</span></div>' +
+    '<div class="stat num"><b>' + r.in_uptrend + '</b><span>en tendencia</span></div>' +
+    '<div class="stat num"><b>' + ((r.by_label || {})['Subida sostenible'] || 0) + '</b><span>sostenibles</span></div>';
+  var labelItems = [['all', 'Todas']].concat(LABELS.map(function (l) { return [l[0], l[0] + ' (' + ((r.by_label || {})[l[0]] || 0) + ')']; }));
+  chips(document.getElementById('labels'), labelItems, state.label, function (v) { state.label = v; state.shown = 20; render(); });
+  var present = {};
+  r.ranking.forEach(function (x) { present[x.market] = x.market_name; });
+  var mk = [['all', 'Todos los mercados']].concat(Object.keys(present).sort().map(function (k) { return [k, present[k]]; }));
+  chips(document.getElementById('markets'), mk, state.market, function (v) { state.market = v; state.shown = 20; render(); });
+
+  var rows = filtered();
+  var list = document.getElementById('list');
+  list.innerHTML = rows.length ? rows.slice(0, state.shown).map(card).join('') : '<div class="empty">No hay acciones con este filtro.</div>';
+  var more = document.getElementById('more');
+  more.hidden = rows.length <= state.shown;
+  more.textContent = 'Ver ' + Math.min(20, rows.length - state.shown) + ' más (' + rows.length + ' en total)';
+}
+
+function pickDay(file) {
+  load(file).then(function (rep) { state.report = rep; state.shown = 20; render(); })
+    .catch(function () { document.getElementById('list').innerHTML = '<div class="empty">No se pudo cargar ese día.</div>'; });
+}
+
+document.getElementById('more').onclick = function () { state.shown += 20; render(); };
+document.getElementById('day').onchange = function (e) { pickDay(e.target.value); };
+
+load('latest.json').then(function (rep) {
+  state.report = rep;
+  render();
+  return load('history/index.json').then(function (dates) {
+    var sel = document.getElementById('day');
+    sel.innerHTML = '<option value="latest.json">Hoy (' + esc(rep.cutoff) + ')</option>' +
+      dates.filter(function (d) { return d !== rep.cutoff; }).map(function (d) { return '<option value="history/' + esc(d) + '.json">' + esc(d) + ' (top 30)</option>'; }).join('');
+  }).catch(function () {});
+}).catch(function () {
+  document.getElementById('meta').textContent = '';
+  document.getElementById('list').innerHTML = '<div class="empty">Aún no hay informe. El radar se genera cada día laborable hacia las 8:00 (hora de Madrid).</div>';
+});
+</script>
+</body>
+</html>
