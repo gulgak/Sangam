@@ -19,7 +19,8 @@ from zoneinfo import ZoneInfo
 import pandas as pd
 
 from . import scoring as sc
-from .universe import BENCHMARKS, load_universe
+from . import paper
+from .universe import BENCHMARKS, SP500, load_universe
 
 log = logging.getLogger("radar")
 TZ = ZoneInfo("Europe/Madrid")
@@ -39,15 +40,18 @@ def _r(x, nd=4):
     return None if x is None else round(float(x), nd)
 
 
-def analyse(source, universe: dict[str, str], cutoff: str) -> dict:
+def analyse(source, universe: dict[str, str], cutoff: str, extra: tuple = (),
+            prices_out: dict | None = None) -> dict:
     t0 = time.time()
     tickers = sorted(universe)
-    benches = sorted({BENCHMARKS[m] for m in set(universe.values()) if m in BENCHMARKS})
+    benches = sorted({BENCHMARKS[m] for m in set(universe.values()) if m in BENCHMARKS} | set(extra))
     log.info("Universo: %d acciones, %d índices", len(tickers), len(benches))
     prices = source.prices(tickers + benches)
     cut = pd.Timestamp(cutoff)
     # Solo sesiones cerradas: se descarta cualquier barra de hoy (Asia puede estar abierta).
     prices = {t: df[df.index < cut] for t, df in prices.items()}
+    if prices_out is not None:
+        prices_out.update(prices)
     stale_limit = cut - timedelta(days=STALE_DAYS)
 
     failed, candidates = [], []
@@ -180,13 +184,23 @@ def main(argv=None) -> int:
     if a.limit:
         universe = dict(list(universe.items())[: a.limit])
 
-    report = analyse(src, universe, cutoff)
+    prices: dict = {}
+    report = analyse(src, universe, cutoff, extra=paper.INDEX_TICKERS, prices_out=prices)
     log.info("Cobertura %.0f%%, %d en tendencia, %d fallidas, %.0fs",
              100 * report["coverage"], report["in_uptrend"], len(report["failed"]), report["runtime_s"])
     if report["coverage"] < MIN_COVERAGE:
         log.error("Cobertura insuficiente (%.0f%%): no se publica el informe", 100 * report["coverage"])
         return 2
     write_outputs(report, Path(a.out))
+    # Cartera experimental de momentum: aislada, un fallo aquí no afecta al informe del radar.
+    if a.source == "yahoo" and SP500 and report.get("data_date"):
+        try:
+            world = [t for t, m in universe.items() if m != "US"]
+            res = paper.run(prices, list(SP500), world, report["data_date"], Path(a.out) / "paper")
+            for name, st in res.items():
+                log.info("Cartera %s: %s, %d rebalanceos", name, st["status"], len(st["rebalances"]))
+        except Exception as e:
+            log.exception("Cartera experimental no actualizada: %s", e)
     for x in report["ranking"][:10]:
         log.info("#%d %-10s %5.1f  T%5.1f F%5s  %s", x["rank"], x["ticker"], x["score"],
                  x["tech_score"], x["fund_score"], x["label"])

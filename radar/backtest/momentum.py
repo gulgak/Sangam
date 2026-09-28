@@ -41,9 +41,18 @@ VARIANT_TEXT = {
 
 
 def month_end_dates(start: str, end: str) -> tuple[pd.DatetimeIndex, pd.DatetimeIndex]:
-    """Último viernes de cada mes (señal) y siguiente día hábil (ejecución)."""
-    fr = pd.date_range(start, end, freq="W-FRI")
-    sig = pd.DatetimeIndex(pd.Series(fr, index=fr).groupby(fr.to_period("M")).max().values)
+    """Último viernes de CALENDARIO de cada mes (señal) y siguiente día hábil (ejecución).
+    Un mes solo cuenta cuando `end` ya ha llegado a su último viernes: el último viernes
+    'visto hasta hoy' a mitad de mes no es una señal."""
+    months = pd.period_range(pd.Timestamp(start), pd.Timestamp(end), freq="M")
+    sig = []
+    for m in months:
+        d = m.end_time.normalize()
+        while d.weekday() != 4:
+            d -= pd.Timedelta(days=1)
+        if pd.Timestamp(start) <= d <= pd.Timestamp(end):
+            sig.append(d)
+    sig = pd.DatetimeIndex(sig)
     return sig, sig + pd.offsets.BDay(1)
 
 
@@ -128,10 +137,11 @@ def scores(prep: MomPrepared, eligible: np.ndarray, variant: str) -> np.ndarray:
 
 
 def select_with_buffer(score: np.ndarray, entry: int = ENTRY, exit_: int = EXIT,
-                       invest: np.ndarray | None = None) -> list[list[int]]:
+                       invest: np.ndarray | None = None, initial: list[int] | None = None) -> list[list[int]]:
     """Cartera en cada fecha: se mantienen las posiciones que sigan en el top `exit_`
-    y se completan hasta `entry` con las mejores que no están. `invest[i]=False` -> liquidez."""
-    held: list[int] = []
+    y se completan hasta `entry` con las mejores que no están. `invest[i]=False` -> liquidez.
+    `initial`: cartera previa (para continuar un seguimiento en vivo)."""
+    held: list[int] = list(initial or [])
     out = []
     for i in range(score.shape[0]):
         if invest is not None and not invest[i]:

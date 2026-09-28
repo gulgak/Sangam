@@ -16,6 +16,8 @@ BENCHMARKS = {
     "KR": "^KS11", "TW": "^TWII", "CA": "^GSPTSE", "AU": "^AXJO", "IN": "^NSEI", "BR": "^BVSP",
 }
 
+SP500: list[str] = []  # composición vigente del S&P 500 del último load_universe()
+
 WIKI = {
     "sp500": ("https://en.wikipedia.org/wiki/List_of_S%26P_500_companies", "Symbol"),
     "ndx": ("https://en.wikipedia.org/wiki/Nasdaq-100", "Ticker"),
@@ -42,10 +44,14 @@ def load_universe(online: bool = True) -> dict[str, str]:
     out = {r["ticker"]: r["market"] for r in rows if r["market"] != "US_FALLBACK"}
     fallback = [r["ticker"] for r in rows if r["market"] == "US_FALLBACK"]
     us: list[str] = []
+    SP500.clear()
     if online:
         for name, (url, col) in WIKI.items():
             try:
-                us += _wiki_tickers(url, col)
+                got = _wiki_tickers(url, col)
+                us += got
+                if name == "sp500":
+                    SP500.extend(got)
             except Exception as e:  # red o cambio de formato en Wikipedia
                 log.warning("Universo %s no disponible (%s); uso respaldo", name, e)
     if not us:
