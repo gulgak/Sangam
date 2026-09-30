@@ -2,10 +2,14 @@ name: Radar de Bolsa
 
 on:
   schedule:
-    # UTC. Con el control de hora de radar/guard.py corre a las ~7:30 de Madrid
-    # todo el año (verano: primera franja; invierno: segunda), de lunes a viernes.
+    # UTC. radar/guard.py deja correr la primera que llegue desde las 7:00 de Madrid
+    # (L-V) y descarta las demás si el informe del día ya existe. Las franjas extra son
+    # respaldo: GitHub puede retrasar las tareas programadas varias horas.
     - cron: "30 5 * * 1-5"
     - cron: "30 6 * * 1-5"
+    - cron: "30 7 * * 1-5"
+    - cron: "30 9 * * 1-5"
+    - cron: "30 12 * * 1-5"
   workflow_dispatch:
 
 permissions:
