@@ -116,6 +116,7 @@
     <div class="eyebrow">Radar diario · bolsa mundial</div>
     <h1>Bol<em>sa</em></h1>
     <div class="meta" id="meta">Cargando…</div>
+    <div class="warnbox" id="stale" hidden></div>
   </header>
 
   <div class="stats" id="stats"></div>
@@ -270,9 +271,26 @@ function pickDay(file) {
 document.getElementById('more').onclick = function () { state.shown += 20; render(); };
 document.getElementById('day').onchange = function (e) { pickDay(e.target.value); };
 
+function bizDaysAfter(fromIso, to) {
+  // Días laborables (L-V) posteriores a fromIso hasta `to` incluido.
+  var d = new Date(fromIso + 'T12:00:00'), n = 0, end = new Date(to.getFullYear(), to.getMonth(), to.getDate(), 12);
+  while (d < end) { d.setDate(d.getDate() + 1); if (d.getDay() !== 0 && d.getDay() !== 6) n++; }
+  return n;
+}
+function checkStale(rep, now) {
+  // Normal: el informe de hoy analiza el cierre del día laborable anterior (≤ 2 días
+  // laborables de diferencia incluso antes de la ejecución de la mañana). Más = retraso.
+  var el = document.getElementById('stale');
+  var gap = rep && rep.data_date ? bizDaysAfter(rep.data_date, now || new Date()) : 99;
+  el.hidden = gap <= 2;
+  if (!el.hidden) el.textContent = '⚠ Informe no actualizado: el último análisis usa el cierre del ' + day(rep.data_date) +
+    '. La ejecución automática de hoy aún no ha terminado o ha fallado.';
+  return gap;
+}
 load('latest.json').then(function (rep) {
   state.report = rep;
   render();
+  checkStale(rep);
   return load('history/index.json').then(function (dates) {
     var sel = document.getElementById('day');
     sel.innerHTML = '<option value="latest.json">Hoy (' + esc(rep.cutoff) + ')</option>' +
