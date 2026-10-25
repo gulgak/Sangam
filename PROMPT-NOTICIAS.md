@@ -5,8 +5,10 @@ pegarlo tal cual en una conversación nueva si quieres el repaso en otro momento
 
 ## Cómo está programado
 
-**Una sola rutina**, `Repaso de noticias — 7:30 Canarias`, con cron `30 6 * * *`
-(06:30 UTC), que en horario de verano canario son las 7:30 de la mañana.
+**Una sola rutina**, `Repaso de noticias — 7:30 Canarias`, con cron `30 7 * * *`
+(07:30 UTC), que en horario de invierno canario (WET, UTC+0) son las 7:30 de la
+mañana. Estuvo en `30 6 * * *` hasta el 25 de octubre de 2026, cuando acabó el
+horario de verano.
 Escribe en esta misma conversación, en modo sesión persistente.
 
 ### El cambio de hora, y por qué ya no se arregla solo
@@ -30,9 +32,13 @@ Con dos redes de seguridad para que no se olvide:
 1. **El propio repaso avisa.** El PASO 4 del prompt comprueba la hora local y,
    si no son las 7 y pico, añade al final un aviso en negrita diciendo que hay
    que cambiar el cron. Funciona aunque no quede nadie pendiente.
-2. **Un recordatorio programado.** Hay una Routine de un solo disparo para el
-   24 de octubre de 2026 (`trig_01QnVPqRu8GXZ5hf9P9Hnk44`) que entra en esta
-   conversación y pide hacer el cambio, y encadenar otro para marzo de 2027.
+2. **Un recordatorio programado.** Hay una Routine de un solo disparo que entra
+   en esta conversación el sábado anterior al cambio, pide hacer el ajuste y
+   encadenar el siguiente. La de octubre de 2026
+   (`trig_01QnVPqRu8GXZ5hf9P9Hnk44`) ya se cumplió: el 25 de octubre de 2026 se
+   movió el cron de `30 6 * * *` a `30 7 * * *`. La siguiente es para el 27 de
+   marzo de 2027 (`trig_01P6wffdJd2V4uJbQxFe6Exo`), que devolverá el cron a
+   `30 6 * * *` al empezar el horario de verano.
 
 El fallo, si las dos fallan, es suave: el repaso sale una hora antes, no deja
 de salir.
